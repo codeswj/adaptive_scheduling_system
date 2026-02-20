@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - TaskFlow</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .admin-shell { max-width: 1280px; margin: 0 auto; padding: 1rem; position: relative; }
+        .admin-shell::before,
+        .admin-shell::after {
+            content: "";
+            position: absolute;
+            border-radius: 999px;
+            filter: blur(1px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .admin-shell::before {
+            width: 220px;
+            height: 220px;
+            top: -50px;
+            right: 140px;
+            background: radial-gradient(circle, rgba(43,110,242,0.18) 0%, rgba(43,110,242,0) 70%);
+        }
+        .admin-shell::after {
+            width: 260px;
+            height: 260px;
+            bottom: 40px;
+            left: -40px;
+            background: radial-gradient(circle, rgba(31,143,99,0.18) 0%, rgba(31,143,99,0) 72%);
+        }
+        .admin-shell > * { position: relative; z-index: 1; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
+        .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.65rem; margin-bottom: 0.8rem; }
+        .admin-card { background: rgba(255, 255, 255, 0.93); border: 1px solid #dbe4f4; border-radius: 14px; padding: 0.8rem; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
+        .admin-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #1f8f63 0%, #35c4a1 50%, #2b6ef2 100%);
+            opacity: 0.65;
+        }
+        .admin-grid .admin-card:nth-child(1) { background: linear-gradient(150deg, #e8f8f1 0%, rgba(255,255,255,0.95) 70%); }
+        .admin-grid .admin-card:nth-child(6) { background: linear-gradient(150deg, #eaf2ff 0%, rgba(255,255,255,0.95) 70%); }
+        .admin-label { color: var(--text-soft); font-size: 0.82rem; }
+        .admin-value { font-size: 1.35rem; font-weight: 800; }
+        .admin-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+        .admin-panels-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+        .panel { background: rgba(255, 255, 255, 0.92); border: 1px solid #dbe4f4; border-radius: 14px; padding: 0.9rem; box-shadow: var(--shadow-sm); }
+        .list { max-height: 360px; overflow: auto; border: 1px solid #ebf0f9; border-radius: 10px; padding: 0.45rem 0.55rem; background: #fff; }
+        .row { border-bottom: 1px solid #edf1f9; padding: 0.48rem 0; }
+        .row:last-child { border-bottom: 0; }
+        .toolbar { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.5rem; }
+        .toolbar input, .toolbar select { padding: 0.4rem 0.55rem; border: 1px solid #d5dfed; border-radius: 10px; font-family: var(--font-body); }
+        .btn { border: none; background: linear-gradient(130deg, #1f8f63 0%, #24a07b 100%); color: #fff; border-radius: 999px; padding: 0.38rem 0.72rem; font-weight: 700; cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, filter .16s ease; box-shadow: 0 10px 24px rgba(31,143,99,.2); }
+        .btn:hover { transform: translateY(-1px); filter: brightness(1.03); box-shadow: 0 12px 28px rgba(31,143,99,.24); }
+        .badge { font-size: 0.72rem; border: 1px solid #d9e0eb; padding: 0.1rem 0.45rem; border-radius: 999px; background: #f7f9fd; }
+        .panel h3 { font-size: 1.12rem; margin-bottom: 0.45rem; position: relative; padding-left: .7rem; }
+        .panel h3::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: .2rem;
+            width: 4px;
+            height: 1.05rem;
+            border-radius: 999px;
+            background: linear-gradient(180deg, #1f8f63 0%, #2b6ef2 100%);
+        }
+        @media (max-width: 1120px) { .admin-panels-3 { grid-template-columns: 1fr; } }
+        @media (max-width: 960px) { .admin-panels { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body style="background:linear-gradient(180deg,#f6f8fe 0%, #eef3ff 100%);">
+    <div class="admin-shell">
+        <div class="admin-header">
+            <div>
+                <h1>Admin Control Center</h1>
+                <p id="adminWelcome">Welcome, Admin</p>
+            </div>
+            <div>
+                <button class="btn" onclick="downloadPlatformReportPdf()">Download PDF Report</button>
+                <button class="btn" onclick="refreshAdminData()">Refresh</button>
+                <button class="btn" onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="admin-grid">
+            <div class="admin-card"><div class="admin-label">Total Users</div><div id="totalUsers" class="admin-value">0</div></div>
+            <div class="admin-card"><div class="admin-label">Active Users</div><div id="activeUsers" class="admin-value">0</div></div>
+            <div class="admin-card"><div class="admin-label">Total Tasks</div><div id="totalTasks" class="admin-value">0</div></div>
+            <div class="admin-card"><div class="admin-label">Completed Tasks</div><div id="completedTasks" class="admin-value">0</div></div>
+            <div class="admin-card"><div class="admin-label">Overdue Tasks</div><div id="overdueTasks" class="admin-value">0</div></div>
+            <div class="admin-card"><div class="admin-label">Total Earnings</div><div id="platformEarnings" class="admin-value">KSh 0</div></div>
+        </div>
+
+        <div class="admin-panels">
+            <section class="panel">
+                <h3>User Management</h3>
+                <div class="toolbar">
+                    <input id="userSearchInput" type="text" placeholder="Search name or phone">
+                    <select id="userStatusFilter">
+                        <option value="all">All status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                    <select id="userWorkTypeFilter">
+                        <option value="">All work types</option>
+                        <option value="boda_boda">boda_boda</option>
+                        <option value="market_vendor">market_vendor</option>
+                        <option value="artisan">artisan</option>
+                        <option value="domestic_worker">domestic_worker</option>
+                        <option value="plumber">plumber</option>
+                        <option value="other">other</option>
+                    </select>
+                    <button class="btn" onclick="applyUserFilters()">Apply</button>
+                </div>
+                <div id="usersList" class="list"></div>
+            </section>
+            <section class="panel">
+                <h3>Operational Task Monitor</h3>
+                <div id="adminTasksList" class="list"></div>
+            </section>
+        </div>
+
+        <div class="admin-panels-3">
+            <section class="panel">
+                <h3>Top Performer Leaderboard</h3>
+                <div id="leaderboardList" class="list"></div>
+            </section>
+            <section class="panel">
+                <h3>Reminder Queue (Next 24h)</h3>
+                <div id="reminderQueueList" class="list"></div>
+            </section>
+            <section class="panel">
+                <h3>User Schedule Preview</h3>
+                <div class="toolbar">
+                    <select id="previewUserId"></select>
+                    <input id="previewDate" type="date">
+                    <button class="btn" onclick="loadSchedulePreview()">Preview</button>
+                </div>
+                <div id="schedulePreviewList" class="list"></div>
+            </section>
+        </div>
+
+        <div class="admin-panels" style="margin-top: 0.75rem;">
+            <section class="panel" style="grid-column: 1 / -1;">
+                <h3>Incident Center</h3>
+                <div class="toolbar">
+                    <select id="incidentStatusFilter">
+                        <option value="all">All incidents</option>
+                        <option value="open">Open</option>
+                        <option value="investigating">Investigating</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="dismissed">Dismissed</option>
+                    </select>
+                    <button class="btn" onclick="loadIncidentCenter()">Refresh Incidents</button>
+                    <span id="incidentSummary" class="badge">Open: 0 | Investigating: 0 | Critical Open: 0</span>
+                </div>
+                <div id="incidentList" class="list"></div>
+            </section>
+        </div>
+
+        <div class="admin-panels" style="margin-top: 0.75rem;">
+            <section class="panel" style="grid-column: 1 / -1;">
+                <h3>Dispatch Board</h3>
+                <div class="toolbar">
+                    <select id="dispatchTaskSelect"></select>
+                    <select id="dispatchTargetUserSelect"></select>
+                    <input id="dispatchReason" type="text" placeholder="Reason (optional)">
+                    <button class="btn" onclick="executeDispatch()">Reassign Task</button>
+                </div>
+                <div id="dispatchStatus" class="badge">Pick task and target user, then reassign.</div>
+                <div id="dispatchHistoryList" class="list" style="margin-top:0.5rem;"></div>
+            </section>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin-dashboard.js"></script>
+</body>
+</html>

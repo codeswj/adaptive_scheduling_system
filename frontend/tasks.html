@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tasks - TaskFlow</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <style>
+        .tasks-shell {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 1.1rem;
+        }
+
+        .tasks-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.9rem;
+        }
+
+        .tasks-title {
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .tasks-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .status-filters {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 0.5rem 0 1rem;
+        }
+
+        .filter-btn {
+            border: none;
+            background: linear-gradient(130deg, #1f8f63 0%, #24a07b 100%);
+            color: #fff;
+            border-radius: 999px;
+            padding: 0.42rem 0.82rem;
+            font-weight: 700;
+            box-shadow: 0 8px 18px rgba(31,143,99,.2);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(130deg, #156f4b 0%, #1f8f63 100%);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .task-list {
+            display: grid;
+            gap: 0.65rem;
+        }
+
+        .task-item {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #dbe4f4;
+            border-radius: 14px;
+            padding: 0.9rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .task-item.highlight {
+            border-color: #ffb79e;
+            box-shadow: 0 0 0 3px rgba(240, 78, 48, 0.12);
+        }
+
+        .task-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .task-meta {
+            color: var(--text-soft);
+            font-size: 0.88rem;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 0.4rem;
+            margin-top: 0.62rem;
+            flex-wrap: wrap;
+        }
+
+        .task-btn {
+            border: none;
+            background: linear-gradient(130deg, #1f8f63 0%, #24a07b 100%);
+            color: #fff;
+            border-radius: 999px;
+            padding: 0.36rem 0.66rem;
+            font-weight: 700;
+            font-size: 0.84rem;
+            box-shadow: 0 8px 18px rgba(31,143,99,.16);
+        }
+
+        .task-btn:hover {
+            filter: brightness(1.03);
+        }
+
+        @media (max-width: 680px) {
+            .tasks-shell {
+                padding: 0.75rem;
+            }
+
+            .tasks-title {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+<body style="background: linear-gradient(180deg,#f6f8fe 0%, #eef3ff 100%);">
+    <div class="tasks-shell">
+        <div class="tasks-topbar">
+            <h1 class="tasks-title">My Tasks</h1>
+            <div class="tasks-actions">
+                <button class="btn-secondary" onclick="window.location.href='dashboard.html'">Back to Dashboard</button>
+                <button class="btn-secondary" onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="status-filters">
+            <button class="filter-btn" data-status="" onclick="applyStatusFilter('')">All</button>
+            <button class="filter-btn" data-status="pending" onclick="applyStatusFilter('pending')">Pending</button>
+            <button class="filter-btn" data-status="in_progress" onclick="applyStatusFilter('in_progress')">In Progress</button>
+            <button class="filter-btn" data-status="completed" onclick="applyStatusFilter('completed')">Completed</button>
+            <button class="filter-btn" data-status="cancelled" onclick="applyStatusFilter('cancelled')">Cancelled</button>
+        </div>
+
+        <div id="taskList" class="task-list"></div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/tasks.js"></script>
+</body>
+</html>

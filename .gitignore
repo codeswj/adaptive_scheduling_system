@@ -1,0 +1,43 @@
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# PHP & Composer
+vendor/
+composer.lock
+*.log
+
+# Environment & Config
+.env
+.env.local
+.env.*.local
+config/local.php
+
+# Database
+*.sql.bak
+database-backups/
+
+# Sessions & Uploads
+sessions/
+uploads/
+temp/
+cache/
+
+# OS Files
+Thumbs.db
+.DS_Store
+
+# Node (if used for frontend tooling)
+node_modules/
+npm-debug.log
+package-lock.json
+
+# Testing
+coverage/
+.phpunit.result.cache
