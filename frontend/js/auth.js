@@ -141,7 +141,8 @@ async function handleRegister(event) {
     const phone = document.getElementById('reg_phone').value;
     const password = document.getElementById('reg_password').value;
     const workType = document.getElementById('reg_work_type').value;
-    const role = document.getElementById('reg_role').value;
+    const roleField = document.getElementById('reg_role');
+    const role = roleField ? roleField.value : 'user';
     const location = document.getElementById('reg_location').value;
     const btnText = document.getElementById('registerBtnText');
     const btn = event.target.querySelector('button[type="submit"]');

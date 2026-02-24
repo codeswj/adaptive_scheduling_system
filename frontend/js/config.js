@@ -2,9 +2,21 @@
    CONFIGURATION
    ======================================== */
 
-const APP_BASE_PATH = window.location.pathname.includes('/adaptive-scheduling-backend/')
-    ? '/adaptive-scheduling-backend'
-    : '';
+function getAppBasePath() {
+    const path = window.location.pathname || '/';
+    const segments = path.split('/').filter(Boolean);
+
+    // Examples:
+    // /adaptive_scheduling_system/index.php -> /adaptive_scheduling_system
+    // /adaptive_scheduling_system/frontend/dashboard.html -> /adaptive_scheduling_system
+    if (segments.length > 0) {
+        return `/${segments[0]}`;
+    }
+
+    return '';
+}
+
+const APP_BASE_PATH = getAppBasePath();
 
 const CONFIG = {
     API_BASE_URL: `${window.location.origin}${APP_BASE_PATH}/backend`,
