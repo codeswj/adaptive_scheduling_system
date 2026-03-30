@@ -1,6 +1,6 @@
 <?php
 /**
- * Create task reminder
+ * Create task reminder using task name
  * POST /api/reminders/create.php
  */
 
@@ -26,9 +26,9 @@ $user_data = AuthMiddleware::authenticate();
 $user_id = $user_data['user_id'];
 $data = json_decode(file_get_contents('php://input'), true);
 
-if(!$data || !isset($data['task_id'], $data['remind_at'])) {
+if(!$data || !isset($data['task_title'], $data['remind_at'])) {
     Response::validationError([
-        'task_id' => 'Task ID is required',
+        'task_title' => 'Task title is required',
         'remind_at' => 'Reminder datetime is required'
     ]);
 }
@@ -39,31 +39,39 @@ if(!$db) {
     Response::serverError('Database connection failed');
 }
 
-$task_query = "SELECT id FROM tasks WHERE id = :task_id AND user_id = :user_id LIMIT 1";
+// Find task by title (case-insensitive search)
+$task_query = "SELECT id, title FROM tasks WHERE user_id = :user_id AND LOWER(title) = LOWER(:task_title) LIMIT 1";
 $task_stmt = $db->prepare($task_query);
-$task_id = (int)$data['task_id'];
-$task_stmt->bindParam(':task_id', $task_id, PDO::PARAM_INT);
 $task_stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+$task_stmt->bindParam(':task_title', $data['task_title']);
 $task_stmt->execute();
 
-if(!$task_stmt->fetch(PDO::FETCH_ASSOC)) {
-    Response::notFound('Task not found');
+$task = $task_stmt->fetch(PDO::FETCH_ASSOC);
+
+if(!$task) {
+    Response::notFound('Task with title "' . htmlspecialchars($data['task_title']) . '" not found');
 }
 
 $channel = isset($data['channel']) ? $data['channel'] : 'in_app';
-$query = "INSERT INTO task_reminders (task_id, user_id, remind_at, channel)
-          VALUES (:task_id, :user_id, :remind_at, :channel)";
+$message = isset($data['message']) ? $data['message'] : "Reminder for task: " . $task['title'];
+
+$query = "INSERT INTO reminders (task_id, user_id, task_title, remind_at, channel, message)
+          VALUES (:task_id, :user_id, :task_title, :remind_at, :channel, :message)";
 $stmt = $db->prepare($query);
-$stmt->bindParam(':task_id', $task_id, PDO::PARAM_INT);
+$stmt->bindParam(':task_id', $task['id'], PDO::PARAM_INT);
 $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+$stmt->bindParam(':task_title', $task['title']);
 $stmt->bindParam(':remind_at', $data['remind_at']);
 $stmt->bindParam(':channel', $channel);
+$stmt->bindParam(':message', $message);
 
 if(!$stmt->execute()) {
     Response::serverError('Failed to create reminder');
 }
 
 Response::success('Reminder created', [
-    'reminder_id' => (int)$db->lastInsertId()
+    'reminder_id' => (int)$db->lastInsertId(),
+    'task_title' => $task['title'],
+    'task_id' => $task['id']
 ], 201);
 ?>

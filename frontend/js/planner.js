@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('planDate').value = today;
     document.getElementById('finFrom').value = today.slice(0, 8) + '01';
     document.getElementById('finTo').value = today;
-    document.getElementById('remAt').value = toLocalDateTimeInputValue(new Date(Date.now() + (60 * 60 * 1000)));
+    document.getElementById('reminderDatetime').value = toLocalDateTimeInputValue(new Date(Date.now() + (60 * 60 * 1000)));
 
     await Promise.all([
         loadPlan(),
@@ -19,9 +19,140 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadTemplates(),
         loadReminders(),
         loadFinance(),
-        loadInsights()
+        loadInsights(),
+        loadTasksForDropdown() // Load tasks for dropdown
     ]);
 });
+
+async function downloadSchedulePDF() {
+    const planDate = document.getElementById('planDate').value;
+    const summaryEl = document.getElementById('planSummary');
+    const listEl = document.getElementById('planList');
+
+    if (!planDate) {
+        summaryEl.textContent = 'Please select a date.';
+        listEl.innerHTML = '';
+        return;
+    }
+
+    summaryEl.textContent = 'Generating schedule PDF...';
+    listEl.innerHTML = '<div class="item">Loading schedule data...</div>';
+
+    try {
+        // Get schedule data
+        const data = await api.getSchedulePlan(planDate);
+        
+        // Generate PDF content
+        const pdfContent = generateSchedulePDFContent(planDate, data);
+        
+        // Create download
+        const blob = new Blob([pdfContent], { type: 'text/html' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `daily_schedule_${planDate}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        // Update display
+        summaryEl.textContent = `${data.summary.scheduled_tasks} tasks, ${data.summary.scheduled_minutes} mins (${data.availability.start_time} - ${data.availability.end_time})`;
+        listEl.innerHTML = (data.slots || []).map(slot => `
+            <div class="item">
+                <strong>${escapeHtml(slot.title)}</strong><br>
+                ${slot.start_at} - ${slot.end_at} (${slot.duration_minutes} mins)
+            </div>
+        `).join('') || '<div class="item">No tasks scheduled.</div>';
+        
+        Utils.showNotification('Schedule PDF downloaded successfully!', 'success');
+        
+    } catch (error) {
+        console.error('Schedule PDF generation error:', error);
+        summaryEl.textContent = 'Failed to generate PDF.';
+        
+        // Provide helpful error messages
+        if (error.message.includes('Database connection failed')) {
+            listEl.innerHTML = `<div class="item">Database connection failed. Please check your database setup.</div>
+                              <div class="item">Run: <a href="../backend/setup_database.php" target="_blank">Database Setup Script</a></div>`;
+        } else if (error.message.includes('user_availability')) {
+            listEl.innerHTML = `<div class="item">Availability table not found. Please run the database setup script.</div>
+                              <div class="item">Run: <a href="../backend/setup_database.php" target="_blank">Database Setup Script</a></div>`;
+        } else {
+            listEl.innerHTML = `<div class="item">${escapeHtml(error.message)}</div>`;
+        }
+    }
+}
+
+function generateSchedulePDFContent(date, data) {
+    const slots = data.slots || [];
+    const summary = data.summary;
+    const availability = data.availability;
+    
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Daily Schedule - ${date}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #007bff; padding-bottom: 20px; }
+        .summary { background: #f8f9fa; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+        .schedule-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .schedule-table th, .schedule-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        .schedule-table th { background-color: #007bff; color: white; }
+        .time-col { width: 120px; font-weight: bold; }
+        .task-col { }
+        .duration-col { width: 100px; text-align: center; }
+        .no-tasks { text-align: center; color: #666; font-style: italic; padding: 20px; }
+        .footer { margin-top: 30px; text-align: center; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📅 Daily Schedule</h1>
+        <h2>${date}</h2>
+        <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+    </div>
+    
+    <div class="summary">
+        <h3>📊 Schedule Summary</h3>
+        <p><strong>Total Tasks:</strong> ${summary.scheduled_tasks}</p>
+        <p><strong>Total Duration:</strong> ${summary.scheduled_minutes} minutes</p>
+        <p><strong>Working Hours:</strong> ${availability.start_time} - ${availability.end_time}</p>
+        <p><strong>Availability:</strong> ${summary.available_minutes} minutes available</p>
+    </div>
+    
+    <h3>⏰ Scheduled Tasks</h3>
+    ${slots.length > 0 ? `
+        <table class="schedule-table">
+            <thead>
+                <tr>
+                    <th class="time-col">Time</th>
+                    <th class="task-col">Task</th>
+                    <th class="duration-col">Duration</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${slots.map(slot => `
+                    <tr>
+                        <td class="time-col">${slot.start_at} - ${slot.end_at}</td>
+                        <td class="task-col"><strong>${escapeHtml(slot.title)}</strong></td>
+                        <td class="duration-col">${slot.duration_minutes} mins</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    ` : '<div class="no-tasks">No tasks scheduled for this day.</div>'}
+    
+    <div class="footer">
+        <p>Generated by TaskFlow Scheduling System</p>
+        <p>This is an automated schedule based on your availability and task priorities.</p>
+    </div>
+</body>
+</html>`;
+}
 
 async function loadPlan() {
     const planDate = document.getElementById('planDate').value;
@@ -44,8 +175,19 @@ async function loadPlan() {
             </div>
         `).join('') || '<div class="item">No tasks scheduled.</div>';
     } catch (error) {
+        console.error('Plan load error:', error);
         summaryEl.textContent = 'Failed to generate plan.';
-        listEl.innerHTML = `<div class="item">${escapeHtml(error.message)}</div>`;
+        
+        // Provide more helpful error messages
+        if (error.message.includes('Database connection failed')) {
+            listEl.innerHTML = `<div class="item">Database connection failed. Please check your database setup.</div>
+                              <div class="item">Run: <a href="../backend/setup_database.php" target="_blank">Database Setup Script</a></div>`;
+        } else if (error.message.includes('user_availability')) {
+            listEl.innerHTML = `<div class="item">Availability table not found. Please run the database setup script.</div>
+                              <div class="item">Run: <a href="../backend/setup_database.php" target="_blank">Database Setup Script</a></div>`;
+        } else {
+            listEl.innerHTML = `<div class="item">${escapeHtml(error.message)}</div>`;
+        }
     }
 }
 
@@ -82,7 +224,17 @@ async function loadAvailability() {
             <div class="item">Day ${row.day_of_week} (${dayNames[Number(row.day_of_week)] || 'N/A'}): ${row.start_time} - ${row.end_time} (${row.is_active == 1 ? 'active' : 'inactive'})</div>
         `).join('') || '<div class="item">No availability set yet.</div>';
     } catch (error) {
-        listEl.innerHTML = `<div class="item">${escapeHtml(error.message)}</div>`;
+        console.error('Availability load error:', error);
+        
+        if (error.message.includes('Database connection failed')) {
+            listEl.innerHTML = `<div class="item">Database connection failed. Please check your database setup.</div>
+                              <div class="item">Run: <a href="../backend/setup_database.php" target="_blank">Database Setup Script</a></div>`;
+        } else if (error.message.includes('user_availability')) {
+            listEl.innerHTML = `<div class="item">Availability table not found. Please run the database setup script.</div>
+                              <div class="item">Run: <a href="../backend/setup_database.php" target="_blank">Database Setup Script</a></div>`;
+        } else {
+            listEl.innerHTML = `<div class="item">${escapeHtml(error.message)}</div>`;
+        }
     }
 }
 
@@ -125,23 +277,124 @@ async function loadTemplates() {
     }
 }
 
-async function createReminder() {
-    const taskId = Number(document.getElementById('remTaskId').value);
-    const remindAt = document.getElementById('remAt').value;
+let allTasks = [];
 
-    if (!Number.isInteger(taskId) || taskId <= 0 || !remindAt) {
-        alert('Task ID and reminder time are required.');
+// Load tasks for dropdown
+async function loadTasksForDropdown() {
+    try {
+        const data = await api.getTasks();
+        allTasks = data.tasks || [];
+        console.log('Loaded tasks for dropdown:', allTasks);
+    } catch (error) {
+        console.error('Failed to load tasks for dropdown:', error);
+        allTasks = [];
+    }
+}
+
+// Show task dropdown when input is focused
+function showTaskDropdown() {
+    const dropdown = document.getElementById('taskDropdown');
+    const input = document.getElementById('reminderTaskTitle');
+    
+    if (allTasks.length === 0) {
+        dropdown.innerHTML = '<div class="task-dropdown-item">No tasks available</div>';
+    } else {
+        dropdown.innerHTML = allTasks.map(task => `
+            <div class="task-dropdown-item" onclick="selectTask('${task.title.replace(/'/g, "\\'")}')">
+                ${escapeHtml(task.title)}
+            </div>
+        `).join('');
+    }
+    
+    dropdown.style.display = 'block';
+}
+
+// Filter tasks based on input
+function filterTasks(searchTerm) {
+    const dropdown = document.getElementById('taskDropdown');
+    
+    if (!searchTerm) {
+        showTaskDropdown();
+        return;
+    }
+    
+    const filteredTasks = allTasks.filter(task => 
+        task.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    if (filteredTasks.length === 0) {
+        dropdown.innerHTML = '<div class="task-dropdown-item">No tasks found</div>';
+    } else {
+        dropdown.innerHTML = filteredTasks.map(task => `
+            <div class="task-dropdown-item" onclick="selectTask('${task.title.replace(/'/g, "\\'")}')">
+                ${escapeHtml(task.title)}
+            </div>
+        `).join('');
+    }
+    
+    dropdown.style.display = 'block';
+}
+
+// Select a task from dropdown
+function selectTask(taskTitle) {
+    const input = document.getElementById('reminderTaskTitle');
+    const dropdown = document.getElementById('taskDropdown');
+    
+    input.value = taskTitle;
+    dropdown.style.display = 'none';
+}
+
+// Hide dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('taskDropdown');
+    const input = document.getElementById('reminderTaskTitle');
+    
+    if (!input.contains(event.target) && !dropdown.contains(event.target)) {
+        dropdown.style.display = 'none';
+    }
+});
+
+// Add event listeners when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const taskInput = document.getElementById('reminderTaskTitle');
+    if (taskInput) {
+        taskInput.addEventListener('click', showTaskDropdown);
+        taskInput.addEventListener('focus', showTaskDropdown);
+        taskInput.addEventListener('input', function() {
+            filterTasks(this.value);
+        });
+    }
+});
+
+async function createReminder() {
+    const taskTitle = document.getElementById('reminderTaskTitle').value.trim();
+    const remindAt = document.getElementById('reminderDatetime').value;
+
+    if (!taskTitle) {
+        alert('Please enter a task title.');
+        return;
+    }
+
+    if (!remindAt) {
+        alert('Please select reminder date and time.');
         return;
     }
 
     try {
-        await api.createReminder({ task_id: taskId, remind_at: formatDateTimeLocalToMySQL(remindAt), channel: 'in_app' });
-        document.getElementById('remTaskId').value = '';
-        document.getElementById('remAt').value = toLocalDateTimeInputValue(new Date(Date.now() + (60 * 60 * 1000)));
-        await loadReminders();
-        Utils.showNotification('Reminder created', 'success');
+        await api.createReminder({
+            task_title: taskTitle,
+            remind_at: remindAt,
+            channel: 'in_app',
+            message: `Reminder for task: ${taskTitle}`
+        });
+        alert('Reminder created!');
+        loadReminders();
+        // Clear form
+        document.getElementById('reminderTaskTitle').value = '';
+        document.getElementById('reminderDatetime').value = '';
     } catch (error) {
-        alert(error.message);
+        console.error('Reminder creation error:', error);
+        alert('Failed to create reminder: ' + error.message);
     }
 }
 
@@ -150,7 +403,10 @@ async function loadReminders() {
     try {
         const data = await api.getReminders('pending');
         listEl.innerHTML = (data.reminders || []).map(r => `
-            <div class="item">Task #${r.task_id} (${escapeHtml(r.task_title)}) at ${r.remind_at}</div>
+            <div class="item">
+                <strong>${escapeHtml(r.task_title)}</strong><br>
+                ${r.remind_at} ${r.task_status ? `(${r.task_status})` : ''}
+            </div>
         `).join('') || '<div class="item">No pending reminders.</div>';
     } catch (error) {
         listEl.innerHTML = `<div class="item">${escapeHtml(error.message)}</div>`;

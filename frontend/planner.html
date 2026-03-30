@@ -10,16 +10,45 @@
         .planner-header { display: flex; justify-content: space-between; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.95rem; }
         .planner-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 0.8rem; }
         .planner-card { background: rgba(255, 255, 255, 0.9); border: 1px solid #dbe4f4; border-radius: 16px; padding: 0.9rem; box-shadow: var(--shadow-sm); }
-        .planner-card h3 { margin-top: 0; margin-bottom: 0.55rem; font-size: 1.05rem; }
-        .muted { color: var(--text-soft); font-size: 0.92rem; }
+        .planner-card h3 { margin-top: 0; margin-bottom: 0.55rem; font-size: 1.05rem; color: #000000; font-weight: 800; }
+        .muted { color: #000000; font-size: 0.92rem; font-weight: 700; }
         .row { display: flex; gap: 0.45rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.45rem; }
-        .row input, .row select, .row textarea { width: 100%; max-width: 280px; padding: 0.46rem 0.6rem; border: 1px solid #d5dfed; border-radius: 10px; font-family: var(--font-body); }
+        .row input, .row select, .row textarea { width: 100%; max-width: 280px; padding: 0.46rem 0.6rem; border: 1px solid #d5dfed; border-radius: 10px; font-family: var(--font-body); background: #ffffff; color: #000000; font-weight: 600; }
         .row textarea { max-width: 100%; min-height: 72px; }
-        .list { max-height: 250px; overflow: auto; border: 1px solid #e1e8f5; border-radius: 10px; padding: 0.45rem 0.55rem; background: #fff; }
-        .item { border-bottom: 1px solid #edf1f9; padding: 0.42rem 0; }
+        .list { max-height: 250px; overflow: auto; border: 1px solid #e1e8f5; border-radius: 10px; padding: 0.45rem 0.55rem; background: #fff; color: #000000; }
+        .item { border-bottom: 1px solid #edf1f9; padding: 0.42rem 0; color: #000000; font-weight: 600; }
         .item:last-child { border-bottom: none; }
-        .btn { border: none; border-radius: 999px; padding: 0.4rem 0.8rem; background: linear-gradient(130deg, #1f8f63 0%, #24a07b 100%); color: #fff; font-weight: 700; cursor: pointer; box-shadow: 0 8px 20px rgba(31,143,99,.2); }
+        .btn { border: none; border-radius: 999px; padding: 0.4rem 0.8rem; background: linear-gradient(130deg, #1f8f63 0%, #24a07b 100%); color: #000000; font-weight: 800; cursor: pointer; box-shadow: 0 8px 20px rgba(31,143,99,.2); }
         .btn:hover { filter: brightness(1.03); }
+        h1 { color: #000000; font-weight: 800; }
+        .task-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 2px;
+        }
+        .task-dropdown-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            color: #000000;
+            font-weight: 600;
+        }
+        .task-dropdown-item:hover {
+            background: #f0f0f0;
+        }
+        .task-dropdown-item:last-child {
+            border-bottom: none;
+        }
         @media (max-width: 680px) { .planner-shell { padding: 0.75rem; } }
     </style>
 </head>
@@ -41,7 +70,7 @@
                 <h3>1. Daily Schedule Plan</h3>
                 <div class="row">
                     <input type="date" id="planDate">
-                    <button class="btn" onclick="loadPlan()">Generate</button>
+                    <button class="btn" onclick="downloadSchedulePDF()">Download PDF</button>
                 </div>
                 <div id="planSummary" class="muted"></div>
                 <div id="planList" class="list"></div>
@@ -84,8 +113,11 @@
             <section class="planner-card">
                 <h3>4. Reminders</h3>
                 <div class="row">
-                    <input type="number" id="remTaskId" placeholder="Task ID">
-                    <input type="datetime-local" id="remAt">
+                    <div style="position: relative; flex: 1;">
+                        <input type="text" id="reminderTaskTitle" placeholder="Task Title" autocomplete="off">
+                        <div id="taskDropdown" class="task-dropdown" style="display: none;"></div>
+                    </div>
+                    <input type="datetime-local" id="reminderDatetime">
                 </div>
                 <div class="row">
                     <button class="btn" onclick="createReminder()">Add Reminder</button>

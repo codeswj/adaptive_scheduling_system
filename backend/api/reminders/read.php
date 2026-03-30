@@ -1,6 +1,6 @@
 <?php
 /**
- * Read reminders
+ * Read reminders with task names
  * GET /api/reminders/read.php?status=pending
  */
 
@@ -32,17 +32,44 @@ if(!$db) {
     Response::serverError('Database connection failed');
 }
 
-$query = "SELECT r.id, r.task_id, t.title AS task_title, r.remind_at, r.channel, r.status
-          FROM task_reminders r
-          INNER JOIN tasks t ON t.id = r.task_id
-          WHERE r.user_id = :user_id AND r.status = :status
-          ORDER BY r.remind_at ASC";
+$query = "SELECT r.*, t.title as current_task_title, t.status as task_status
+          FROM reminders r
+          LEFT JOIN tasks t ON r.task_id = t.id
+          WHERE r.user_id = :user_id";
+
+if($status !== 'all') {
+    $query .= " AND r.status = :status";
+}
+
+$query .= " ORDER BY r.remind_at ASC";
+
 $stmt = $db->prepare($query);
 $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
-$stmt->bindParam(':status', $status);
+
+if($status !== 'all') {
+    $stmt->bindParam(':status', $status);
+}
+
 $stmt->execute();
+$reminders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Format reminders for frontend
+$formatted_reminders = [];
+foreach($reminders as $reminder) {
+    $formatted_reminders[] = [
+        'id' => (int)$reminder['id'],
+        'task_title' => $reminder['task_title'] ?: $reminder['current_task_title'] ?: 'Unknown Task',
+        'task_id' => $reminder['task_id'],
+        'remind_at' => $reminder['remind_at'],
+        'channel' => $reminder['channel'],
+        'message' => $reminder['message'],
+        'status' => $reminder['status'],
+        'task_status' => $reminder['task_status'],
+        'created_at' => $reminder['created_at']
+    ];
+}
 
 Response::success('Reminders retrieved', [
-    'reminders' => $stmt->fetchAll(PDO::FETCH_ASSOC)
+    'reminders' => $formatted_reminders
 ]);
 ?>

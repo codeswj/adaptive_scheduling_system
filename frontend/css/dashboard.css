@@ -28,8 +28,8 @@
 }
 
 .sidebar .logo-text {
-    color: #111827;
-    font-weight: 700;
+    color: #000000;
+    font-weight: 800;
     font-size: 1.25rem;
 }
 
@@ -42,24 +42,24 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    color: #6b7280;
+    color: #000000;
     text-decoration: none;
     padding: 0.875rem 1.25rem;
     margin: 0.25rem 0.75rem;
     border-radius: 8px;
     transition: all 0.2s ease;
-    font-weight: 500;
+    font-weight: 800;
 }
 
 .nav-item:hover {
     background: #f3f4f6;
-    color: #374151;
+    color: #000000;
 }
 
 .nav-item.active {
     background: #7c3aed;
     color: #ffffff;
-    font-weight: 600;
+    font-weight: 800;
 }
 
 .nav-item.active:hover {
@@ -76,11 +76,11 @@
 .nav-badge {
     margin-left: auto;
     background: #e5e7eb;
-    color: #6b7280;
+    color: #000000;
     padding: 0.125rem 0.5rem;
     border-radius: 999px;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .sidebar-footer {
@@ -94,7 +94,8 @@
     align-items: center;
     gap: 0.5rem;
     font-size: 0.875rem;
-    color: #6b7280;
+    color: #000000;
+    font-weight: 700;
 }
 
 .status-dot {
@@ -127,14 +128,15 @@
 
 .page-title {
     font-size: 2rem;
-    font-weight: 700;
-    color: #111827;
+    font-weight: 800;
+    color: #000000;
 }
 
 .page-subtitle {
-    color: #6b7280;
+    color: #000000;
     font-size: 0.875rem;
     margin-top: 0.25rem;
+    font-weight: 700;
 }
 
 .header-right {
@@ -151,7 +153,7 @@
     background: #7c3aed;
     color: #ffffff;
     padding: 0.625rem 1rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -169,7 +171,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -203,20 +205,21 @@
     border-radius: 999px;
     background: #7c3aed;
     color: #ffffff;
-    font-weight: 700;
+    font-weight: 800;
     display: grid;
     place-items: center;
     font-size: 0.875rem;
 }
 
 .user-name {
-    font-weight: 600;
-    color: #111827;
+    font-weight: 800;
+    color: #000000;
 }
 
 .user-role {
     font-size: 0.875rem;
-    color: #6b7280;
+    color: #000000;
+    font-weight: 700;
 }
 
 .stats-grid {
@@ -227,8 +230,8 @@
 }
 
 .stat-card {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
+    background: #6A0DAD;
+    border: 1px solid #6A0DAD;
     border-radius: 12px;
     padding: 1.5rem;
     display: flex;
@@ -259,15 +262,15 @@
 
 .stat-value {
     font-size: 1.5rem;
-    font-weight: 700;
-    color: #111827;
+    font-weight: 800;
+    color: #000000;
     line-height: 1.2;
 }
 
 .stat-label {
     font-size: 0.875rem;
-    color: #6b7280;
-    font-weight: 500;
+    color: #000000;
+    font-weight: 800;
 }
 
 .card-blue .stat-icon {
@@ -300,9 +303,9 @@
 }
 
 .stat-label {
-    color: var(--text-soft);
+    color: #000000;
     font-size: 0.84rem;
-    font-weight: 700;
+    font-weight: 800;
 }
 
 .content-section {
@@ -324,15 +327,15 @@
 
 .section-title {
     font-size: 1.25rem;
-    font-weight: 600;
-    color: #111827;
+    font-weight: 800;
+    color: #000000;
 }
 
 .btn-text {
     border: 0;
     background: transparent;
     color: #7c3aed;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: color 0.2s ease;
     font-size: 0.875rem;
@@ -354,6 +357,27 @@
     padding: 1rem;
     transition: all 0.2s ease;
     cursor: pointer;
+    color: #000000;
+}
+
+.task-card h4 {
+    color: #000000;
+    font-weight: 800;
+}
+
+.task-card .urgency-badge {
+    color: #000000;
+    font-weight: 700;
+}
+
+.task-card p {
+    color: #000000;
+    font-weight: 600;
+}
+
+.task-card span {
+    color: #000000;
+    font-weight: 600;
 }
 
 .task-card:hover {
@@ -379,7 +403,7 @@
     border: none;
     border-radius: 8px;
     padding: 0.75rem 1.5rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
 }
@@ -425,8 +449,9 @@
 }
 
 .action-text {
-    font-weight: 700;
+    font-weight: 800;
     font-size: 0.9rem;
+    color: #000000;
 }
 
 .modal {
@@ -455,25 +480,33 @@
     width: min(760px, 92vw);
     max-height: 92vh;
     overflow: auto;
-    background: #fff;
-    border: 1px solid #dbe4f4;
+    background: #1e40af;
+    border: 1px solid #ffffff;
     border-radius: 18px;
     box-shadow: var(--shadow-lg);
 }
 
 .modal-header {
     padding: 1rem 1.1rem;
-    border-bottom: 1px solid #e7ecf5;
+    border-bottom: 1px solid #ffffff;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
+.modal-header h2 {
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 1.5rem;
+    margin: 0;
+}
+
 .modal-close {
     width: 34px;
     height: 34px;
-    border: 1px solid #d3dded;
-    background: #fff;
+    border: 1px solid #ffffff;
+    background: #000000;
+    color: #ffffff;
     border-radius: 999px;
     font-size: 1.1rem;
 }
@@ -497,10 +530,20 @@
 .modal-body select,
 .modal-body textarea {
     width: 100%;
-    border: 1px solid #d6dfed;
+    border: 1px solid #ffffff;
     border-radius: 10px;
     padding: 0.58rem 0.68rem;
     font-family: var(--font-body);
+    background: #ffffff;
+    color: #000000;
+}
+
+.modal-body label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.875rem;
 }
 
 .modal-footer {

@@ -222,12 +222,34 @@ class TaskAPI {
 
     async getInsights() {
         const response = await fetch(`${this.baseURL}${CONFIG.API_ENDPOINTS.INSIGHTS_RECOMMENDATIONS}`, {
-            method: 'GET',
             headers: this.getHeaders()
         });
         const data = await response.json();
-        if (!data.success) throw new Error(data.message || 'Failed to load insights');
+        if (!data.success) throw new Error(data.message || 'Failed to get insights');
         return data.data;
+    }
+
+    async downloadReportPdf(params) {
+        const queryString = new URLSearchParams(params).toString();
+        const response = await fetch(`${this.baseURL}${CONFIG.API_ENDPOINTS.REPORTS_PDF}?${queryString}`, {
+            headers: this.getHeaders()
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to generate PDF report');
+        }
+        
+        // Create download link
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `taskflow_report_${params.from}_to_${params.to}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
     }
 
     async getAdminOverview() {

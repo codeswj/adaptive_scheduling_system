@@ -40,6 +40,7 @@ const CONFIG = {
         REMINDER_READ: '/api/reminders/read.php',
         FINANCE_SUMMARY: '/api/finance/summary.php',
         INSIGHTS_RECOMMENDATIONS: '/api/insights/recommendations.php',
+        REPORTS_PDF: '/api/reports/generate_pdf.php',
         ADMIN_OVERVIEW: '/api/admin/overview.php',
         ADMIN_USERS: '/api/admin/users.php',
         ADMIN_TASKS: '/api/admin/tasks.php',
