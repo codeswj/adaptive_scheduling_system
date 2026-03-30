@@ -94,6 +94,16 @@
         </div>
     </div>
 
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-left">
+            <span class="footer-text">Adaptive_Scheduling_System</span>
+        </div>
+        <div class="footer-right">
+            <span class="footer-text">Silvia Gatiba</span>
+        </div>
+    </footer>
+
     <!-- Auth Modal -->
     <div id="authModal" class="auth-modal">
         <div class="auth-backdrop" onclick="closeAuth()"></div>

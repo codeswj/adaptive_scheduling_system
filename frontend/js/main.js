@@ -4,7 +4,7 @@
 
 // Smooth animations on scroll
 document.addEventListener('DOMContentLoaded', () => {
-    // Add animation classes when elements come into view
+    // Enhanced observer options for better performance
     const observerOptions = {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'
@@ -13,22 +13,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
+                entry.target.classList.add('animate');
+                
+                // Stagger animation for feature items
+                if (entry.target.classList.contains('feature-item')) {
+                    const items = Array.from(document.querySelectorAll('.feature-item'));
+                    const index = items.indexOf(entry.target);
+                    entry.target.style.animationDelay = `${index * 0.1}s`;
+                }
             }
         });
     }, observerOptions);
     
-    // Observe all feature items
-    document.querySelectorAll('.feature-item').forEach(item => {
-        item.style.opacity = '0';
-        item.style.transform = 'translateY(20px)';
-        item.style.transition = 'all 0.6s ease';
+    // Observe features section
+    const featuresSection = document.querySelector('.features-section');
+    if (featuresSection) {
+        observer.observe(featuresSection);
+    }
+    
+    // Observe all feature items individually
+    document.querySelectorAll('.feature-item').forEach((item, index) => {
+        item.style.transitionDelay = `${index * 0.1}s`;
         observer.observe(item);
     });
     
+    // Add parallax effect to hero background on mouse move
+    const heroBg = document.querySelector('.hero-bg');
+    if (heroBg) {
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 20;
+            const y = (e.clientY / window.innerHeight - 0.5) * 20;
+            heroBg.style.transform = `translate(${x}px, ${y}px)`;
+        });
+    }
+    
     // Initialize connection monitor UI
-    if (Utils.isOnline()) {
+    if (typeof Utils !== 'undefined' && Utils.isOnline()) {
         console.log('Online mode');
     } else {
         console.log('Offline mode');
