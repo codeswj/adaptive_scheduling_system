@@ -12,12 +12,32 @@
         .planner-card { background: rgba(255, 255, 255, 0.9); border: 1px solid #dbe4f4; border-radius: 16px; padding: 0.9rem; box-shadow: var(--shadow-sm); }
         .planner-card h3 { margin-top: 0; margin-bottom: 0.55rem; font-size: 1.05rem; color: #000000; font-weight: 800; }
         .muted { color: #000000; font-size: 0.92rem; font-weight: 700; }
+        .muted.small { font-size: 0.82rem; font-weight: 500; }
         .row { display: flex; gap: 0.45rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.45rem; }
         .row input, .row select, .row textarea { width: 100%; max-width: 280px; padding: 0.46rem 0.6rem; border: 1px solid #d5dfed; border-radius: 10px; font-family: var(--font-body); background: #ffffff; color: #000000; font-weight: 600; }
         .row textarea { max-width: 100%; min-height: 72px; }
         .list { max-height: 250px; overflow: auto; border: 1px solid #e1e8f5; border-radius: 10px; padding: 0.45rem 0.55rem; background: #fff; color: #000000; }
         .item { border-bottom: 1px solid #edf1f9; padding: 0.42rem 0; color: #000000; font-weight: 600; }
         .item:last-child { border-bottom: none; }
+        .availability-row { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; font-size: 0.95rem; }
+        .availability-actions { display: flex; gap: 0.35rem; }
+        .availability-actions button { border: none; background: transparent; padding: 0.2rem 0.3rem; font-size: 1rem; cursor: pointer; color: #1f8f63; border-radius: 6px; transition: background 0.2s; }
+        .availability-actions button:hover { background: rgba(31, 143, 99, 0.1); }
+        .availability-actions button.delete { color: #c53030; }
+        .btn.ghost { background: transparent; color: #1f8f63; border: 1px solid #1f8f63; box-shadow: none; }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); align-items: center; justify-content: center; z-index: 2000; }
+        .modal-overlay.active { display: flex; }
+        .modal-panel { background: #fff; border-radius: 20px; padding: 1.5rem; width: min(420px, 90vw); box-shadow: 0 20px 50px rgba(0,0,0,0.25); }
+        .modal-panel h4 { margin-top: 0; }
+        .modal-panel .modal-row { margin-bottom: 0.9rem; display: flex; flex-direction: column; gap: 0.4rem; }
+        .modal-panel input, .modal-panel select { padding: 0.6rem 0.8rem; border-radius: 10px; border: 1px solid #d5dfed; font-weight: 600; }
+        .modal-panel .modal-actions { display: flex; justify-content: flex-end; gap: 0.6rem; }
+        .modal-panel .modal-actions button { border-radius: 12px; padding: 0.45rem 0.9rem; border:none; font-weight: 700; cursor:pointer; }
+        .modal-panel .modal-actions .ghost { background: transparent; color: #1f8f63; border: 1px solid #1f8f63; }
+        .inline-actions { display: flex; gap: 0.4rem; align-items: center; }
+        .inline-actions button { border: none; background: transparent; padding: 0; color: #1f8f63; font-size: 1rem; cursor: pointer; }
+        .inline-actions button.delete { color: #c53030; }
+        .schedule-modal .modal-panel { max-width: 500px; border-radius: 26px; }
         .btn { border: none; border-radius: 999px; padding: 0.4rem 0.8rem; background: linear-gradient(130deg, #1f8f63 0%, #24a07b 100%); color: #000000; font-weight: 800; cursor: pointer; box-shadow: 0 8px 20px rgba(31,143,99,.2); }
         .btn:hover { filter: brightness(1.03); }
         h1 { color: #000000; font-weight: 800; }
@@ -70,9 +90,11 @@
                 <h3>1. Daily Schedule Plan</h3>
                 <div class="row">
                     <input type="date" id="planDate">
+                    <button class="btn" onclick="openScheduleModal()">Schedule</button>
                     <button class="btn" onclick="downloadSchedulePDF()">Download PDF</button>
                 </div>
                 <div id="planSummary" class="muted"></div>
+                <div id="planStatus" class="muted small"></div>
                 <div id="planList" class="list"></div>
             </section>
 
@@ -84,10 +106,13 @@
                     <input type="time" id="availEnd" value="18:00">
                 </div>
                 <div class="row">
-                    <button class="btn" onclick="saveAvailability()">Save Day</button>
+                    <button class="btn" id="saveAvailBtn" onclick="saveAvailability()">Save Day</button>
+                    <button class="btn" onclick="downloadAvailabilityPdf()">Download weekly PDF</button>
                 </div>
                 <div id="availabilityList" class="list"></div>
+                <div id="availabilityStatus" class="muted small"></div>
             </section>
+
 
             <section class="planner-card">
                 <h3>3. Task Templates</h3>
@@ -106,6 +131,7 @@
                 </div>
                 <div class="row">
                     <button class="btn" onclick="createTemplate()">Create Template</button>
+                    <button class="btn" onclick="downloadTemplatesPdf()">Download Templates PDF</button>
                 </div>
                 <div id="templateList" class="list"></div>
             </section>
@@ -121,8 +147,10 @@
                 </div>
                 <div class="row">
                     <button class="btn" onclick="createReminder()">Add Reminder</button>
+                    <button class="btn" onclick="downloadRemindersPdf()">Download Reminders PDF</button>
                 </div>
                 <div id="reminderList" class="list"></div>
+                <div id="reminderStatus" class="muted small"></div>
             </section>
 
             <section class="planner-card">
@@ -136,15 +164,159 @@
                     <button class="btn" onclick="downloadMyReportPdf()">Download PDF Report</button>
                 </div>
                 <div id="financeSummary" class="list"></div>
+                <div id="financeStatus" class="muted small"></div>
             </section>
 
             <section class="planner-card">
                 <h3>6. Productivity Insights</h3>
                 <div class="row">
                     <button class="btn" onclick="loadInsights()">Generate Insights</button>
+                    <button class="btn" onclick="downloadInsightsPdf()">Download Insights PDF</button>
                 </div>
                 <div id="insightsList" class="list"></div>
+                <div id="insightStatus" class="muted small"></div>
             </section>
+        </div>
+
+        <div id="reminderModal" class="modal-overlay" aria-hidden="true">
+            <div class="modal-panel">
+                <h4>Edit Reminder</h4>
+                <div class="modal-row">
+                    <label for="modalReminderTitle">Task</label>
+                    <input type="text" id="modalReminderTitle" readonly>
+                </div>
+                <div class="modal-row">
+                    <label for="modalReminderDatetime">Remind at</label>
+                    <input type="datetime-local" id="modalReminderDatetime">
+                </div>
+                <div class="modal-row">
+                    <label for="modalReminderChannel">Channel</label>
+                    <select id="modalReminderChannel">
+                        <option value="in_app">In app</option>
+                        <option value="sms">SMS</option>
+                        <option value="email">Email</option>
+                        <option value="push">Push</option>
+                    </select>
+                </div>
+                <div class="modal-row">
+                    <label for="modalReminderStatus">Status</label>
+                    <select id="modalReminderStatus">
+                        <option value="pending">Pending</option>
+                        <option value="sent">Sent</option>
+                        <option value="dismissed">Dismissed</option>
+                        <option value="failed">Failed</option>
+                    </select>
+                </div>
+                <div class="modal-row">
+                    <label for="modalReminderMessage">Message</label>
+                    <textarea id="modalReminderMessage" rows="2"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button class="ghost" type="button" onclick="closeReminderModal()">Cancel</button>
+                    <button type="button" class="btn" onclick="saveReminderFromModal()">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="financeModal" class="modal-overlay" aria-hidden="true">
+            <div class="modal-panel">
+                <h4>Edit Finance Line</h4>
+                <div class="modal-row">
+                    <label for="financeLabel">Label</label>
+                    <input type="text" id="financeLabel">
+                </div>
+                <div class="modal-row">
+                    <label for="financeValue">Value</label>
+                    <input type="text" id="financeValue">
+                </div>
+                <div class="modal-actions">
+                    <button class="ghost" type="button" onclick="closeFinanceModal()">Cancel</button>
+                    <button type="button" class="btn" onclick="saveFinanceModal()">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="insightModal" class="modal-overlay" aria-hidden="true">
+            <div class="modal-panel">
+                <h4>Edit Insight</h4>
+                <div class="modal-row">
+                    <label for="insightLabel">Label</label>
+                    <input type="text" id="insightLabel">
+                </div>
+                <div class="modal-row">
+                    <label for="insightValue">Value</label>
+                    <input type="text" id="insightValue">
+                </div>
+                <div class="modal-actions">
+                    <button class="ghost" type="button" onclick="closeInsightModal()">Cancel</button>
+                    <button type="button" class="btn" onclick="saveInsightModal()">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="availabilityModal" class="modal-overlay" aria-hidden="true">
+            <div class="modal-panel">
+                <h4>Edit Weekly Availability</h4>
+                <div class="modal-row">
+                    <label for="modalDay">Day</label>
+                    <select id="modalDay">
+                        <option value="0">Sunday</option>
+                        <option value="1">Monday</option>
+                        <option value="2">Tuesday</option>
+                        <option value="3">Wednesday</option>
+                        <option value="4">Thursday</option>
+                        <option value="5">Friday</option>
+                        <option value="6">Saturday</option>
+                    </select>
+                </div>
+                <div class="modal-row">
+                    <label for="modalStart">Start time</label>
+                    <input type="time" id="modalStart" value="08:00">
+                </div>
+                <div class="modal-row">
+                    <label for="modalEnd">End time</label>
+                    <input type="time" id="modalEnd" value="18:00">
+                </div>
+                <div class="modal-row">
+                    <label for="modalActive">
+                        <input type="checkbox" id="modalActive" checked> Active
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button class="ghost" type="button" onclick="closeAvailabilityModal()">Cancel</button>
+                    <button type="button" class="btn" onclick="saveAvailabilityModal()">Save changes</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="scheduleModal" class="modal-overlay schedule-modal" aria-hidden="true">
+            <div class="modal-panel">
+                <h4>Plan a Task</h4>
+                <div class="modal-row">
+                    <label for="scheduleDate">Date</label>
+                    <input type="date" id="scheduleDate">
+                </div>
+                <div class="modal-row">
+                    <label for="scheduleTime">Start time</label>
+                    <input type="time" id="scheduleTime" value="08:00">
+                </div>
+                <div class="modal-row">
+                    <label for="scheduleTitle">Task title</label>
+                    <input type="text" id="scheduleTitle" placeholder="Task title" autocomplete="off">
+                </div>
+                <div class="modal-row">
+                    <label for="scheduleDuration">Duration (minutes)</label>
+                    <input type="number" id="scheduleDuration" min="10" value="30">
+                </div>
+                <div class="modal-row">
+                    <label for="scheduleNotes">Notes</label>
+                    <textarea id="scheduleNotes" rows="2"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button class="ghost" type="button" onclick="closeScheduleModal()">Cancel</button>
+                    <button type="button" class="btn" id="scheduleModalSaveButton" onclick="saveScheduleFromModal()">Schedule Task</button>
+                </div>
+            </div>
         </div>
     </div>
 

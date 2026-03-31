@@ -6,6 +6,13 @@ if (!Utils.requireAuth()) {
     throw new Error('Authentication required');
 }
 
+let remindersCache = [];
+let editingReminderId = null;
+let planDataCache = null;
+let editingScheduleTaskId = null;
+let availabilityCache = [];
+let editingAvailabilityDay = null;
+
 document.addEventListener('DOMContentLoaded', async () => {
     const today = new Date().toISOString().slice(0, 10);
     document.getElementById('planDate').value = today;
@@ -81,7 +88,111 @@ async function downloadSchedulePDF() {
         } else {
             listEl.innerHTML = `<div class="item">${escapeHtml(error.message)}</div>`;
         }
+        setAvailabilityStatus('Unable to load availability.');
     }
+}
+
+function renderAvailabilityList() {
+    const listEl = document.getElementById('availabilityList');
+    if (!listEl) return;
+
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    if (!availabilityCache.length) {
+        listEl.innerHTML = '<div class="item">No availability set yet.</div>';
+        return;
+    }
+
+    listEl.innerHTML = availabilityCache.map(row => {
+        const dayName = dayNames[Number(row.day_of_week)] || 'Day';
+        const range = `${escapeHtml(row.start_time)} - ${escapeHtml(row.end_time)}`;
+        const status = row.is_active == 1 ? ' (active)' : ' (inactive)';
+        const safeStart = (row.start_time || '').replace(/'/g, "\\'");
+        const safeEnd = (row.end_time || '').replace(/'/g, "\\'");
+
+        return `
+            <div class="item availability-row">
+                <span>${dayName} (${row.day_of_week}): ${range}${status}</span>
+                <span class="availability-actions">
+                    <button type="button" title="Edit availability" onclick="openAvailabilityModal(${row.day_of_week}, '${safeStart}', '${safeEnd}', ${row.is_active})">&#9998;</button>
+                    <button type="button" class="delete" title="Delete availability" onclick="deleteAvailabilityEntry(${row.day_of_week})">&#128465;</button>
+                </span>
+            </div>
+        `;
+    }).join('');
+}
+
+function openAvailabilityModal(day, startTime, endTime, isActive) {
+    editingAvailabilityDay = day;
+    document.getElementById('modalDay').value = day;
+    document.getElementById('modalStart').value = startTime || '08:00';
+    document.getElementById('modalEnd').value = endTime || '18:00';
+    document.getElementById('modalActive').checked = Number(isActive) === 1;
+
+    const modal = document.getElementById('availabilityModal');
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    setAvailabilityStatus(`Editing availability for day ${day}`);
+}
+
+function closeAvailabilityModal() {
+    editingAvailabilityDay = null;
+    const modal = document.getElementById('availabilityModal');
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    setAvailabilityStatus('');
+}
+
+async function saveAvailabilityModal() {
+    const day = Number(document.getElementById('modalDay').value);
+    const start = document.getElementById('modalStart').value;
+    const end = document.getElementById('modalEnd').value;
+    const isActive = document.getElementById('modalActive').checked ? 1 : 0;
+
+    if (Number.isNaN(day) || day < 0 || day > 6) {
+        alert('Select a valid day.');
+        return;
+    }
+    if (!start || !end) {
+        alert('Start and end times are required.');
+        return;
+    }
+
+    try {
+        await api.saveAvailability([{
+            day_of_week: day,
+            start_time: start,
+            end_time: end,
+            is_active: isActive
+        }]);
+        await loadAvailability();
+        Utils.showNotification('Availability updated', 'success');
+        setAvailabilityStatus(`Availability saved for day ${day}.`);
+        closeAvailabilityModal();
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+async function deleteAvailabilityEntry(day) {
+    if (!confirm('Delete this availability entry?')) {
+        return;
+    }
+
+    try {
+        await api.deleteAvailabilityDay(day);
+        await loadAvailability();
+        Utils.showNotification('Availability deleted', 'success');
+        setAvailabilityStatus(`Availability removed for day ${day}.`);
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
+function setAvailabilityStatus(message) {
+    const statusEl = document.getElementById('availabilityStatus');
+    if (!statusEl) return;
+    statusEl.textContent = message || '';
 }
 
 function generateSchedulePDFContent(date, data) {
@@ -160,39 +271,84 @@ async function loadPlan() {
     const listEl = document.getElementById('planList');
 
     if (!planDate) {
-        summaryEl.textContent = 'Please select a date.';
-        listEl.innerHTML = '';
+        if (summaryEl) summaryEl.textContent = 'Please select a date.';
+        if (listEl) listEl.innerHTML = '';
         return;
     }
 
+    setPlanStatus('');
+
     try {
         const data = await api.getSchedulePlan(planDate);
-        summaryEl.textContent = `${data.summary.scheduled_tasks} tasks, ${data.summary.scheduled_minutes} mins (${data.availability.start_time} - ${data.availability.end_time})`;
-        listEl.innerHTML = (data.slots || []).map(slot => `
-            <div class="item">
-                <strong>${escapeHtml(slot.title)}</strong><br>
-                ${slot.start_at} - ${slot.end_at} (${slot.duration_minutes} mins)
-            </div>
-        `).join('') || '<div class="item">No tasks scheduled.</div>';
+        planDataCache = data;
+        renderPlanSummary(data);
+        renderPlanList(data);
     } catch (error) {
         console.error('Plan load error:', error);
-        summaryEl.textContent = 'Failed to generate plan.';
-        
-        // Provide more helpful error messages
-        if (error.message.includes('Database connection failed')) {
-            listEl.innerHTML = `<div class="item">Database connection failed. Please check your database setup.</div>
-                              <div class="item">Run: <a href="../backend/setup_database.php" target="_blank">Database Setup Script</a></div>`;
-        } else if (error.message.includes('user_availability')) {
-            listEl.innerHTML = `<div class="item">Availability table not found. Please run the database setup script.</div>
-                              <div class="item">Run: <a href="../backend/setup_database.php" target="_blank">Database Setup Script</a></div>`;
-        } else {
-            listEl.innerHTML = `<div class="item">${escapeHtml(error.message)}</div>`;
+        if (summaryEl) summaryEl.textContent = 'Failed to generate plan.';
+        if (listEl) {
+            if (error.message.includes('Database connection failed')) {
+                listEl.innerHTML = `<div class="item">Database connection failed. Please check your database setup.</div>
+                                  <div class="item">Run: <a href="../backend/setup_database.php" target="_blank">Database Setup Script</a></div>`;
+            } else if (error.message.includes('user_availability')) {
+                listEl.innerHTML = `<div class="item">Availability table not found. Please run the database setup script.</div>
+                                  <div class="item">Run: <a href="../backend/setup_database.php" target="_blank">Database Setup Script</a></div>`;
+            } else {
+                listEl.innerHTML = `<div class="item">${escapeHtml(error.message)}</div>`;
+            }
         }
     }
 }
 
+function renderPlanSummary(data) {
+    const summaryEl = document.getElementById('planSummary');
+    if (!summaryEl) return;
+    const summary = data?.summary || {};
+    const availability = data?.availability || {};
+    const start = availability.start_time || '00:00';
+    const end = availability.end_time || '00:00';
+    const tasks = summary.scheduled_tasks || 0;
+    const minutes = summary.scheduled_minutes || 0;
+    summaryEl.textContent = `${tasks} tasks, ${minutes} mins (${start} - ${end})`;
+}
+
+function renderPlanList(data) {
+    const listEl = document.getElementById('planList');
+    if (!listEl) return;
+    const slots = data?.slots || [];
+
+    if (!slots.length) {
+        listEl.innerHTML = '<div class="item">No tasks scheduled.</div>';
+        return;
+    }
+
+    listEl.innerHTML = slots.map(slot => {
+        const title = escapeHtml(slot.title || 'Untitled');
+        const duration = slot.duration_minutes || 0;
+        const safeStart = escapeSingleQuote(slot.start_at);
+        const safeTitle = escapeSingleQuote(slot.title);
+        return `
+            <div class="item availability-row">
+                <span>
+                    <strong>${title}</strong><br>
+                    ${slot.start_at} - ${slot.end_at} (${duration} mins)
+                </span>
+                <span class="inline-actions">
+                    <button type="button" title="Edit task" onclick="openScheduleEditModal(${slot.task_id}, '${safeStart}', ${duration}, '${safeTitle}')">&#9998;</button>
+                    <button type="button" class="delete" title="Remove task" onclick="deleteScheduledTask(${slot.task_id})">&#128465;</button>
+                </span>
+            </div>
+        `;
+    }).join('');
+}
+
+function escapeSingleQuote(value) {
+    return String(value || '').replace(/'/g, "\\'");
+}
+
 async function saveAvailability() {
-    const day = Number(document.getElementById('availDay').value);
+    const dayInput = document.getElementById('availDay');
+    const day = Number(dayInput.value);
     const start = document.getElementById('availStart').value;
     const end = document.getElementById('availEnd').value;
 
@@ -207,8 +363,10 @@ async function saveAvailability() {
 
     try {
         await api.saveAvailability([{ day_of_week: day, start_time: start, end_time: end, is_active: true }]);
+        dayInput.value = '';
         await loadAvailability();
         Utils.showNotification('Availability saved', 'success');
+        setAvailabilityStatus(`Availability saved for day ${day}.`);
     } catch (error) {
         alert(error.message);
     }
@@ -216,13 +374,12 @@ async function saveAvailability() {
 
 async function loadAvailability() {
     const listEl = document.getElementById('availabilityList');
-    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     try {
         const data = await api.getAvailability();
-        listEl.innerHTML = (data.availability || []).map(row => `
-            <div class="item">Day ${row.day_of_week} (${dayNames[Number(row.day_of_week)] || 'N/A'}): ${row.start_time} - ${row.end_time} (${row.is_active == 1 ? 'active' : 'inactive'})</div>
-        `).join('') || '<div class="item">No availability set yet.</div>';
+        availabilityCache = data.availability || [];
+        renderAvailabilityList();
+        setAvailabilityStatus('');
     } catch (error) {
         console.error('Availability load error:', error);
         
@@ -282,8 +439,8 @@ let allTasks = [];
 // Load tasks for dropdown
 async function loadTasksForDropdown() {
     try {
-        const data = await api.getTasks();
-        allTasks = data.tasks || [];
+        const tasks = await api.fetchTasks();
+        allTasks = tasks || [];
         console.log('Loaded tasks for dropdown:', allTasks);
     } catch (error) {
         console.error('Failed to load tasks for dropdown:', error);
@@ -364,6 +521,37 @@ document.addEventListener('DOMContentLoaded', function() {
             filterTasks(this.value);
         });
     }
+    const reminderModal = document.getElementById('reminderModal');
+    if (reminderModal) {
+        reminderModal.addEventListener('click', (event) => {
+            if (event.target === reminderModal) {
+                closeReminderModal();
+            }
+        });
+    }
+    const availabilityModal = document.getElementById('availabilityModal');
+    if (availabilityModal) {
+        availabilityModal.addEventListener('click', (event) => {
+            if (event.target === availabilityModal) {
+                closeAvailabilityModal();
+            }
+        });
+    }
+    const scheduleModal = document.getElementById('scheduleModal');
+    if (scheduleModal) {
+        scheduleModal.addEventListener('click', (event) => {
+            if (event.target === scheduleModal) {
+                closeScheduleModal();
+            }
+        });
+    }
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeReminderModal();
+            closeAvailabilityModal();
+            closeScheduleModal();
+        }
+    });
 });
 
 async function createReminder() {
@@ -402,14 +590,116 @@ async function loadReminders() {
     const listEl = document.getElementById('reminderList');
     try {
         const data = await api.getReminders('pending');
-        listEl.innerHTML = (data.reminders || []).map(r => `
-            <div class="item">
-                <strong>${escapeHtml(r.task_title)}</strong><br>
-                ${r.remind_at} ${r.task_status ? `(${r.task_status})` : ''}
-            </div>
-        `).join('') || '<div class="item">No pending reminders.</div>';
+        remindersCache = data.reminders || [];
+        renderRemindersList(remindersCache);
+        setReminderStatus('');
     } catch (error) {
+        remindersCache = [];
         listEl.innerHTML = `<div class="item">${escapeHtml(error.message)}</div>`;
+        setReminderStatus('Unable to load reminders.');
+    }
+}
+
+function renderRemindersList(rows) {
+    const listEl = document.getElementById('reminderList');
+    if (!rows || rows.length === 0) {
+        listEl.innerHTML = '<div class="item">No pending reminders.</div>';
+        return;
+    }
+
+    listEl.innerHTML = rows.map(reminder => {
+        const statusText = reminder.status ? ` (${escapeHtml(reminder.status)})` : '';
+        const remindAt = reminder.remind_at ? escapeHtml(reminder.remind_at) : '';
+        const title = reminder.task_title ? escapeHtml(reminder.task_title) : 'Untitled';
+        return `
+            <div class="item availability-row">
+                <span>
+                    <strong>${title}</strong><br>
+                    ${remindAt}${statusText}
+                </span>
+                <span class="inline-actions">
+                    <button type="button" title="Edit reminder" onclick="openReminderModal(${reminder.id})">&#9998;</button>
+                    <button type="button" class="delete" title="Delete reminder" onclick="deleteReminderRow(${reminder.id})">&#128465;</button>
+                </span>
+            </div>
+        `;
+    }).join('');
+}
+
+function openReminderModal(id) {
+    const reminder = remindersCache.find(item => item.id === id);
+    if (!reminder) return;
+
+    editingReminderId = id;
+    document.getElementById('modalReminderTitle').value = reminder.task_title || '';
+    document.getElementById('modalReminderDatetime').value = toLocalDateTimeInputValueFromString(reminder.remind_at);
+    document.getElementById('modalReminderChannel').value = reminder.channel || 'in_app';
+    document.getElementById('modalReminderStatus').value = reminder.status || 'pending';
+    document.getElementById('modalReminderMessage').value = reminder.message || '';
+
+    const modal = document.getElementById('reminderModal');
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    setReminderStatus(`Editing reminder for ${reminder.task_title || 'task'}`);
+}
+
+function closeReminderModal() {
+    editingReminderId = null;
+    const modal = document.getElementById('reminderModal');
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    setReminderStatus('');
+}
+
+async function saveReminderFromModal() {
+    if (!editingReminderId) {
+        return;
+    }
+
+    const remindAt = document.getElementById('modalReminderDatetime').value;
+    if (!remindAt) {
+        alert('Please select reminder date and time.');
+        return;
+    }
+
+    const payload = {
+        id: editingReminderId,
+        remind_at: remindAt,
+        channel: document.getElementById('modalReminderChannel').value,
+        status: document.getElementById('modalReminderStatus').value,
+        message: document.getElementById('modalReminderMessage').value.trim()
+    };
+
+    try {
+        await api.updateReminder(payload);
+        await loadReminders();
+        closeReminderModal();
+        setReminderStatus('Reminder updated.');
+        Utils.showNotification('Reminder updated', 'success');
+    } catch (error) {
+        alert(error.message || 'Failed to update reminder.');
+    }
+}
+
+async function deleteReminderRow(id) {
+    if (!confirm('Delete this reminder?')) {
+        return;
+    }
+
+    try {
+        await api.deleteReminder(id);
+        await loadReminders();
+        setReminderStatus('Reminder deleted.');
+        Utils.showNotification('Reminder deleted', 'success');
+    } catch (error) {
+        alert(error.message || 'Failed to delete reminder.');
+    }
+}
+
+function setReminderStatus(message) {
+    const el = document.getElementById('reminderStatus');
+    if (el) {
+        el.textContent = message || '';
     }
 }
 
@@ -479,6 +769,105 @@ async function loadInsights() {
     }
 }
 
+function setPlanStatus(message) {
+    const statusEl = document.getElementById('planStatus');
+    if (!statusEl) return;
+    statusEl.textContent = message || '';
+}
+
+function openScheduleModal() {
+    editingScheduleTaskId = null;
+    const modal = document.getElementById('scheduleModal');
+    if (!modal) return;
+    document.getElementById('scheduleDate').value = document.getElementById('planDate').value || new Date().toISOString().slice(0, 10);
+    document.getElementById('scheduleTime').value = '08:00';
+    document.getElementById('scheduleTitle').value = '';
+    document.getElementById('scheduleDuration').value = 30;
+    document.getElementById('scheduleNotes').value = '';
+    const saveBtn = document.getElementById('scheduleModalSaveButton');
+    if (saveBtn) saveBtn.textContent = 'Schedule Task';
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+async function openScheduleEditModal(taskId, startAt, duration, title) {
+    editingScheduleTaskId = taskId;
+    const [datePart, timePart] = (startAt || '').split(' ');
+    const modal = document.getElementById('scheduleModal');
+    if (!modal) return;
+    document.getElementById('scheduleDate').value = datePart || new Date().toISOString().slice(0, 10);
+    document.getElementById('scheduleTime').value = (timePart || '08:00').slice(0,5);
+    document.getElementById('scheduleTitle').value = title || '';
+    document.getElementById('scheduleDuration').value = duration || 30;
+    const task = allTasks.find(t => t.id === taskId);
+    document.getElementById('scheduleNotes').value = task ? (task.description || '') : '';
+    const saveBtn = document.getElementById('scheduleModalSaveButton');
+    if (saveBtn) saveBtn.textContent = 'Update Task';
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    setPlanStatus(`Editing ${title || 'task'}...`);
+}
+
+function closeScheduleModal() {
+    editingScheduleTaskId = null;
+    const modal = document.getElementById('scheduleModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    const saveBtn = document.getElementById('scheduleModalSaveButton');
+    if (saveBtn) saveBtn.textContent = 'Schedule Task';
+}
+
+async function saveScheduleFromModal() {
+    const date = document.getElementById('scheduleDate').value;
+    const time = document.getElementById('scheduleTime').value;
+    const title = document.getElementById('scheduleTitle').value.trim();
+    const duration = Number(document.getElementById('scheduleDuration').value);
+    const notes = document.getElementById('scheduleNotes').value.trim();
+
+    if (!date || !time || !title) {
+        alert('Date, time, and title are required.');
+        return;
+    }
+
+    const payload = {
+        title,
+        description: notes,
+        deadline: `${date} ${time}:00`,
+        estimated_duration: Number.isNaN(duration) || duration < 1 ? 30 : duration
+    };
+
+    try {
+        if (editingScheduleTaskId) {
+            await api.updateTask({ id: editingScheduleTaskId, ...payload });
+            setPlanStatus('Task updated');
+        } else {
+            await api.createTask(payload);
+            setPlanStatus('Task scheduled');
+        }
+        closeScheduleModal();
+        await loadPlan();
+        await loadTasksForDropdown();
+        Utils.showNotification('Schedule synced successfully', 'success');
+    } catch (error) {
+        alert(error.message || 'Failed to save schedule.');
+    }
+}
+
+async function deleteScheduledTask(taskId) {
+    if (!confirm('Remove this task from the schedule?')) {
+        return;
+    }
+
+    try {
+        await api.deleteTask(taskId);
+        await loadPlan();
+        Utils.showNotification('Task removed', 'success');
+    } catch (error) {
+        alert(error.message || 'Failed to delete task.');
+    }
+}
+
 function escapeHtml(value) {
     return String(value)
         .replace(/&/g, '&amp;')
@@ -495,4 +884,12 @@ function formatDateTimeLocalToMySQL(dateTimeValue) {
 function toLocalDateTimeInputValue(dateObj) {
     const tzOffsetMs = dateObj.getTimezoneOffset() * 60000;
     return new Date(dateObj.getTime() - tzOffsetMs).toISOString().slice(0, 16);
+}
+
+function toLocalDateTimeInputValueFromString(value) {
+    if (!value) return '';
+    const sanitized = value.replace(' ', 'T');
+    const parsed = new Date(sanitized);
+    if (Number.isNaN(parsed.getTime())) return '';
+    return toLocalDateTimeInputValue(parsed);
 }

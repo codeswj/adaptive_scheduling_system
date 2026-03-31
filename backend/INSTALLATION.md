@@ -68,8 +68,7 @@
        ├── utils/
        ├── middleware/
        ├── database.sql
-       ├── index.php
-       └── test-connection.php
+       └── index.php
    ```
 
 ### 4. Configure Database Connection
@@ -96,16 +95,13 @@
 
 ### 5. Test Installation
 
-1. **Test Database Connection**
-   - Open browser
-   - Go to: `http://localhost/adaptive-scheduling-backend/test-connection.php`
-   - You should see green success messages
-   - All tables should show "OK" status
+1. **Verify Database Connection**
+   - Make sure `config/database.php` contains the correct credentials
+   - Confirm the `adaptive_scheduling_db` database exists
 
-2. **Test API Endpoint**
+2. **Verify API Endpoint**
    - Go to: `http://localhost/adaptive-scheduling-backend/`
-   - You should see JSON response with API information
-   - Status should be "online"
+   - You should see the backend API response
 
 ### 6. Test API with Sample Requests
 
@@ -263,7 +259,6 @@ adaptive-scheduling-backend/
 │
 ├── database.sql               # Database schema
 ├── index.php                  # API entry point
-├── test-connection.php        # Setup test page
 └── README.md                  # Documentation
 ```
 
@@ -307,7 +302,7 @@ adaptive-scheduling-backend/
 ## Support
 
 If you encounter any issues:
-1. Check the test-connection.php page
+1. Verify your database and API endpoint
 2. Verify XAMPP services are running
 3. Check error logs in XAMPP control panel
 4. Review browser console for errors

@@ -47,15 +47,16 @@ async function saveProfile(event) {
 
     const payload = {
         full_name: document.getElementById('full_name').value.trim(),
+        phone_number: document.getElementById('phone_number').value.trim(),
         work_type: document.getElementById('work_type').value,
         location: document.getElementById('location').value.trim(),
         connectivity_profile: document.getElementById('connectivity_profile').value,
         device_type: navigator.userAgent
     };
 
-    if (!payload.full_name || !payload.location) {
+    if (!payload.full_name || !payload.location || !payload.phone_number) {
         statusEl.className = 'status error';
-        statusEl.textContent = 'Full name and location are required.';
+        statusEl.textContent = 'Full name, phone number and location are required.';
         return;
     }
 
@@ -66,6 +67,7 @@ async function saveProfile(event) {
         }
         statusEl.className = 'status success';
         statusEl.textContent = 'Profile updated successfully.';
+        alert('Profile saved successfully.');
         await loadProfile();
     } catch (error) {
         console.error('Failed to save profile:', error);

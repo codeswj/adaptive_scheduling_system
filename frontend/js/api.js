@@ -167,6 +167,17 @@ class TaskAPI {
         return data.data || {};
     }
 
+    async deleteAvailabilityDay(dayOfWeek) {
+        const response = await fetch(`${this.baseURL}${CONFIG.API_ENDPOINTS.AVAILABILITY_DELETE}`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify({ day_of_week: dayOfWeek })
+        });
+        const data = await response.json();
+        if (!data.success) throw new Error(data.message || 'Failed to delete availability');
+        return data.data || {};
+    }
+
     async createTemplate(templateData) {
         const response = await fetch(`${this.baseURL}${CONFIG.API_ENDPOINTS.TEMPLATE_CREATE}`, {
             method: 'POST',
@@ -197,6 +208,28 @@ class TaskAPI {
         const data = await response.json();
         if (!data.success) throw new Error(data.message || 'Failed to create reminder');
         return data.data;
+    }
+
+    async updateReminder(payload) {
+        const response = await fetch(`${this.baseURL}${CONFIG.API_ENDPOINTS.REMINDER_UPDATE}`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json();
+        if (!data.success) throw new Error(data.message || 'Failed to update reminder');
+        return data.data;
+    }
+
+    async deleteReminder(reminderId) {
+        const response = await fetch(`${this.baseURL}${CONFIG.API_ENDPOINTS.REMINDER_DELETE}`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify({ id: reminderId })
+        });
+        const data = await response.json();
+        if (!data.success) throw new Error(data.message || 'Failed to delete reminder');
+        return data.data || {};
     }
 
     async getReminders(status = 'pending') {

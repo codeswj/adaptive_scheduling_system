@@ -90,10 +90,11 @@ adaptive-scheduling-backend/
    - Place project in your web root (e.g., `/xampp/htdocs/`)
    - Access via `http://localhost/adaptive-scheduling-backend/`
 
-5. **Test connection**
-   ```bash
-   php backend/test-connection.php
-   ```
+5. **Verify installation**
+   - Ensure `config/database.php` has the correct database credentials
+   - Confirm the database `adaptive_scheduling_db` exists
+   - Use the backend API home page to confirm the server is running
+
 
 ## API Documentation
 
