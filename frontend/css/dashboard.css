@@ -6,12 +6,8 @@
     display: grid;
     grid-template-columns: 280px 1fr;
     min-height: 100vh;
-    background: #f8fafc;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: #050505;
-}
-
-body, .sidebar {
+    background: linear-gradient(180deg, #e3ecff 0%, #d8e6ff 50%, #c2d4ff 100%);
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
     color: #050505;
 }
 
@@ -23,8 +19,9 @@ body, .sidebar {
     height: 100vh;
     position: sticky;
     top: 0;
-    border-right: 1px solid #e5e7eb;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+    border-right: 1px solid #dfe6f5;
+    box-shadow: 6px 0 30px rgba(15, 52, 122, 0.12);
+    width: 210px;
 }
 
 .sidebar-header {
@@ -38,22 +35,23 @@ body, .sidebar {
     font-size: 1.25rem;
 }
 
-.sidebar-nav {
+ .sidebar-nav {
     flex: 1;
-    padding-top: 1rem;
+    padding: 0.35rem 0.2rem;
 }
 
 .nav-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    color: #000000;
+    gap: 0.55rem;
+    color: #050505;
     text-decoration: none;
-    padding: 0.875rem 1.25rem;
-    margin: 0.25rem 0.75rem;
-    border-radius: 8px;
+    padding: 0.55rem 0.9rem;
+    margin: 0.25rem 0.4rem;
+    border-radius: 999px;
     transition: all 0.2s ease;
-    font-weight: 800;
+    font-weight: 700;
+    font-size: 12px;
 }
 
 .nav-item:hover {
@@ -75,7 +73,7 @@ body, .sidebar {
 .nav-icon {
     width: 1.25rem;
     text-align: center;
-    font-size: 1.125rem;
+    font-size: 1rem;
 }
 
 .nav-badge {
@@ -118,8 +116,9 @@ body, .sidebar {
 }
 
 .main-content {
-    padding: 1.5rem 2rem 2rem;
-    background: #f8fafc;
+    padding: 1.5rem 1.25rem 2rem;
+    margin-left: 0;
+    background: transparent;
 }
 
 .dashboard-header {
@@ -149,6 +148,24 @@ body, .sidebar {
     align-items: center;
     gap: 1rem;
     flex-wrap: wrap;
+}
+
+.btn {
+    border: none;
+    border-radius: 18px;
+    padding: 0.6rem 1.4rem;
+    background: linear-gradient(135deg, #1f4bca 0%, #368fff 70%);
+    color: #ffffff;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(20, 76, 188, 0.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(20, 76, 188, 0.35);
+    filter: brightness(1.05);
 }
 
 .mobile-logout-btn {

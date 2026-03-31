@@ -6,32 +6,36 @@
     <title>User Schedule Preview - TaskFlow</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/dashboard.css">
-    <style>body{background:#f8fafc;} .panel{border-radius:14px;border:1px solid #dbe4f4;background:#fff;padding:1.5rem;box-shadow:var(--shadow-sm);} .toolbar select,input{padding:0.6rem;border:1px solid #d5dfed;border-radius:10px;margin-right:0.5rem;} .toolbar button{margin-top:0;}</style>
+    <style>body{background:#f8fafc;} .panel{border-radius:14px;border:1px solid #dbe4f4;background:#fff;padding:1.5rem;box-shadow:var(--shadow-sm);} .toolbar select,input{padding:0.6rem;border:1px solid #d5dfed;border-radius:10px;margin-right:0.5rem;} .toolbar button{margin-top:0;} .empty{color:#6171a5;} .schedule-summary{background:#eef3ff;border:1px solid #d5def4;border-radius:12px;padding:0.75rem 1rem;margin-top:1rem;color:#050505;font-weight:600;} .schedule-slots{margin-top:1rem;display:flex;flex-direction:column;gap:0.6rem;} .schedule-slot{background:#fff;border:1px solid #dfe6f5;border-radius:12px;padding:0.8rem 1rem;box-shadow:0 4px 12px rgba(15,52,122,0.08);} .schedule-slot strong{font-size:1rem;display:block;} .schedule-slot small{display:block;color:#3b4b70;margin-top:0.25rem;}</style>
 </head>
 <body class="dashboard-body">
     <aside class="sidebar">
         <div class="sidebar-header"><div class="logo"><span class="logo-icon">⚡</span><span class="logo-text">TaskFlow</span></div></div>
         <nav class="sidebar-nav">
-            <a href="admin-dashboard.html" class="nav-item">Dashboard</a>
-            <a href="user-management.html" class="nav-item">User Management</a>
-            <a href="operational-tasks.html" class="nav-item">Operational Task Monitor</a>
-            <a href="leaderboard.html" class="nav-item">Top Performer Leaderboard</a>
-            <a href="reminders.html" class="nav-item">Reminder Queue (Next 24h)</a>
-            <a href="schedule-preview.html" class="nav-item active">User Schedule Preview</a>
-            <a href="incident-center.html" class="nav-item">Incident Center</a>
-            <a href="dispatch-board.html" class="nav-item">Dispatch Board</a>
+            <a href="admin-dashboard.html" class="nav-item"><span class="nav-icon">📊</span><span class="nav-text">Dashboard</span></a>
+            <a href="user-management.html" class="nav-item"><span class="nav-icon">👤</span><span class="nav-text">User Management</span></a>
+            <a href="operational-tasks.html" class="nav-item"><span class="nav-icon">🛠️</span><span class="nav-text">Operational Task Monitor</span></a>
+            <a href="leaderboard.html" class="nav-item"><span class="nav-icon">🏆</span><span class="nav-text">Top Performer Leaderboard</span></a>
+            <a href="reminders.html" class="nav-item"><span class="nav-icon">⏳</span><span class="nav-text">Reminder Queue (Next 24h)</span></a>
+            <a href="schedule-preview.html" class="nav-item active"><span class="nav-icon">📆</span><span class="nav-text">User Schedule Preview</span></a>
+            <a href="#" class="nav-item" onclick="handleLogout()"><span class="nav-icon">↗</span><span class="nav-text">Logout</span></a>
         </nav>
     </aside>
     <main class="main-content">
         <header class="dashboard-header"><h1 class="page-title">User Schedule Preview</h1></header>
         <section class="content-section"><div class="panel">
-            <div class="toolbar">
-                <select><option>Select user</option></select>
-                <input type="date" value="2026-03-31">
-                <button class="btn">Preview</button>
+            <div class="toolbar" style="flex-wrap:wrap;">
+                <select id="schedulePreviewUser"><option value="">Select user</option></select>
+                <input id="schedulePreviewDate" type="date" value="2026-03-31">
+                <button id="schedulePreviewButton" class="btn">Preview</button>
             </div>
-            <p class="empty" style="color:#6171a5;">Select a user and date to preview their timeline.</p>
+            <div id="schedulePreviewSummary" class="schedule-summary"><p class="empty">Select a user and date to preview their timeline.</p></div>
+            <div id="schedulePreviewList" class="schedule-slots"><p class="empty">Once you run a preview, scheduled tasks will appear here.</p></div>
         </div></section>
     </main>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin-modules.js"></script>
 </body>
 </html>
