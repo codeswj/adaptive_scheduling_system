@@ -12,6 +12,8 @@ let planDataCache = null;
 let editingScheduleTaskId = null;
 let availabilityCache = [];
 let editingAvailabilityDay = null;
+let templateCache = [];
+let editingTemplateId = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     const today = new Date().toISOString().slice(0, 10);
@@ -423,14 +425,105 @@ async function loadTemplates() {
     const listEl = document.getElementById('templateList');
     try {
         const data = await api.getTemplates();
-        listEl.innerHTML = (data.templates || []).map(t => `
-            <div class="item">
-                <strong>${escapeHtml(t.name)}</strong> - ${escapeHtml(t.title)}<br>
-                ${escapeHtml(t.urgency)} | ${t.estimated_duration} mins
-            </div>
-        `).join('') || '<div class="item">No templates yet.</div>';
+        templateCache = data.templates || [];
+        renderTemplateList(templateCache);
     } catch (error) {
         listEl.innerHTML = `<div class="item">${escapeHtml(error.message)}</div>`;
+    }
+}
+
+function renderTemplateList(templates) {
+    const listEl = document.getElementById('templateList');
+    if (!listEl) return;
+
+    if (!templates || !templates.length) {
+        listEl.innerHTML = '<div class="item">No templates yet.</div>';
+        return;
+    }
+
+    listEl.innerHTML = templates.map(t => {
+        const safeName = escapeHtml(t.name);
+        const safeTitle = escapeHtml(t.title);
+        const safeUrgency = escapeHtml(t.urgency || 'medium');
+        const safeDuration = Number.isFinite(Number(t.estimated_duration)) ? t.estimated_duration : '30';
+        return `
+            <div class="item availability-row">
+                <span>
+                    <strong>${safeName}</strong> - ${safeTitle}<br>
+                    ${safeUrgency} | ${safeDuration} mins
+                </span>
+                <span class="inline-actions">
+                    <button type="button" title="Edit template" onclick="openTemplateModal(${t.id})">&#9998;</button>
+                    <button type="button" class="delete" title="Delete template" onclick="deleteTemplateEntry(${t.id})">&#128465;</button>
+                </span>
+            </div>
+        `;
+    }).join('');
+}
+
+function openTemplateModal(templateId) {
+    const template = templateCache.find(item => item.id === templateId);
+    if (!template) return;
+
+    editingTemplateId = templateId;
+    document.getElementById('modalTemplateName').value = template.name || '';
+    document.getElementById('modalTemplateTitle').value = template.title || '';
+    document.getElementById('modalTemplateUrgency').value = template.urgency || 'medium';
+    document.getElementById('modalTemplateDuration').value = template.estimated_duration || 30;
+
+    const modal = document.getElementById('templateModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeTemplateModal() {
+    editingTemplateId = null;
+    const modal = document.getElementById('templateModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+async function saveTemplateFromModal() {
+    if (!editingTemplateId) return;
+
+    const name = document.getElementById('modalTemplateName').value.trim();
+    const title = document.getElementById('modalTemplateTitle').value.trim();
+    const urgency = document.getElementById('modalTemplateUrgency').value;
+    const durationInput = Number(document.getElementById('modalTemplateDuration').value);
+    const estimatedDuration = Number.isNaN(durationInput) || durationInput < 1 ? 30 : durationInput;
+
+    if (!name || !title) {
+        alert('Template name and title are required.');
+        return;
+    }
+
+    try {
+        await api.updateTemplate({
+            id: editingTemplateId,
+            name,
+            title,
+            urgency,
+            estimated_duration: estimatedDuration
+        });
+        await loadTemplates();
+        closeTemplateModal();
+        Utils.showNotification('Template updated', 'success');
+    } catch (error) {
+        alert(error.message || 'Failed to update template.');
+    }
+}
+
+async function deleteTemplateEntry(templateId) {
+    if (!confirm('Delete this template?')) return;
+
+    try {
+        await api.deleteTemplate(templateId);
+        await loadTemplates();
+        Utils.showNotification('Template deleted', 'success');
+    } catch (error) {
+        alert(error.message || 'Failed to delete template.');
     }
 }
 
@@ -537,6 +630,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+    const templateModal = document.getElementById('templateModal');
+    if (templateModal) {
+        templateModal.addEventListener('click', (event) => {
+            if (event.target === templateModal) {
+                closeTemplateModal();
+            }
+        });
+    }
     const scheduleModal = document.getElementById('scheduleModal');
     if (scheduleModal) {
         scheduleModal.addEventListener('click', (event) => {
@@ -550,6 +651,7 @@ document.addEventListener('DOMContentLoaded', function() {
             closeReminderModal();
             closeAvailabilityModal();
             closeScheduleModal();
+            closeTemplateModal();
         }
     });
 });

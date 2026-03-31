@@ -37,6 +37,8 @@ const CONFIG = {
         AVAILABILITY_DELETE: '/api/availability/delete.php',
         TEMPLATE_CREATE: '/api/templates/create.php',
         TEMPLATE_READ: '/api/templates/read.php',
+        TEMPLATE_UPDATE: '/api/templates/update.php',
+        TEMPLATE_DELETE: '/api/templates/delete.php',
         REMINDER_CREATE: '/api/reminders/create.php',
         REMINDER_READ: '/api/reminders/read.php',
         REMINDER_UPDATE: '/api/reminders/update.php',

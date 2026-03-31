@@ -199,6 +199,28 @@ class TaskAPI {
         return data.data;
     }
 
+    async updateTemplate(templateData) {
+        const response = await fetch(`${this.baseURL}${CONFIG.API_ENDPOINTS.TEMPLATE_UPDATE}`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify(templateData)
+        });
+        const data = await response.json();
+        if (!data.success) throw new Error(data.message || 'Failed to update template');
+        return data.data;
+    }
+
+    async deleteTemplate(templateId) {
+        const response = await fetch(`${this.baseURL}${CONFIG.API_ENDPOINTS.TEMPLATE_DELETE}`, {
+            method: 'POST',
+            headers: this.getHeaders(),
+            body: JSON.stringify({ id: templateId })
+        });
+        const data = await response.json();
+        if (!data.success) throw new Error(data.message || 'Failed to delete template');
+        return data.data;
+    }
+
     async createReminder(payload) {
         const response = await fetch(`${this.baseURL}${CONFIG.API_ENDPOINTS.REMINDER_CREATE}`, {
             method: 'POST',
