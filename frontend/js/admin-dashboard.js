@@ -60,6 +60,7 @@ function renderOverview(overview) {
 
 function renderUsers(users) {
     const usersList = document.getElementById('usersList');
+    if (!usersList) return;
     if (!users.length) {
         usersList.innerHTML = '<div class="row">No users found.</div>';
         return;
@@ -82,6 +83,7 @@ function renderUsers(users) {
 
 function renderTasks(tasks) {
     const tasksList = document.getElementById('adminTasksList');
+    if (!tasksList) return;
     if (!tasks.length) {
         tasksList.innerHTML = '<div class="row">No operational tasks found.</div>';
         return;
@@ -102,6 +104,7 @@ function renderTasks(tasks) {
 
 function renderLeaderboard(rows) {
     const list = document.getElementById('leaderboardList');
+    if (!list) return;
     if (!rows.length) {
         list.innerHTML = '<div class="row">No leaderboard data yet.</div>';
         return;
@@ -120,6 +123,7 @@ function renderLeaderboard(rows) {
 
 function renderReminderQueue(reminders) {
     const list = document.getElementById('reminderQueueList');
+    if (!list) return;
     if (!reminders.length) {
         list.innerHTML = '<div class="row">No reminders due in next 24 hours.</div>';
         return;
@@ -147,9 +151,13 @@ function hydratePreviewUserSelect(users) {
 }
 
 async function loadSchedulePreview() {
-    const userId = Number(document.getElementById('previewUserId').value);
-    const date = document.getElementById('previewDate').value;
+    const userIdEl = document.getElementById('previewUserId');
+    const dateEl = document.getElementById('previewDate');
     const list = document.getElementById('schedulePreviewList');
+    if (!userIdEl || !dateEl || !list) return;
+
+    const userId = Number(userIdEl.value);
+    const date = dateEl.value;
 
     if (!Number.isInteger(userId) || userId <= 0) {
         list.innerHTML = '<div class="row">Select a user to preview schedule.</div>';

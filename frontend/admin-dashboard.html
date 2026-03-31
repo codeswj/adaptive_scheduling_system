@@ -5,179 +5,116 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - TaskFlow</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
     <style>
-        .admin-shell { max-width: 1280px; margin: 0 auto; padding: 1rem; position: relative; }
-        .admin-shell::before,
-        .admin-shell::after {
-            content: "";
-            position: absolute;
-            border-radius: 999px;
-            filter: blur(1px);
-            pointer-events: none;
-            z-index: 0;
+        .section-link.active { background: #6d28d9; color: #ffffff; }
+        .content-wrapper { width: 100%; }
+        .section-header { margin-bottom: 0.8rem; }
+        .admin-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
         }
-        .admin-shell::before {
-            width: 220px;
-            height: 220px;
-            top: -50px;
-            right: 140px;
-            background: radial-gradient(circle, rgba(43,110,242,0.18) 0%, rgba(43,110,242,0) 70%);
+        .admin-stat {
+            background: #ffffff;
+            border-radius: 14px;
+            padding: 1rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid #dbe4f4;
         }
-        .admin-shell::after {
-            width: 260px;
-            height: 260px;
-            bottom: 40px;
-            left: -40px;
-            background: radial-gradient(circle, rgba(31,143,99,0.18) 0%, rgba(31,143,99,0) 72%);
+        .admin-stat strong {
+            font-size: 0.75rem;
+            color: #6171a5;
+            display: block;
         }
-        .admin-shell > * { position: relative; z-index: 1; }
-        .admin-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.9rem; }
-        .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.65rem; margin-bottom: 0.8rem; }
-        .admin-card { background: rgba(255, 255, 255, 0.93); border: 1px solid #dbe4f4; border-radius: 14px; padding: 0.8rem; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; }
-        .admin-card::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, #1f8f63 0%, #35c4a1 50%, #2b6ef2 100%);
-            opacity: 0.65;
+        .admin-stat .value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1f4bca;
+            margin-top: 0.35rem;
         }
-        .admin-grid .admin-card:nth-child(1) { background: linear-gradient(150deg, #e8f8f1 0%, rgba(255,255,255,0.95) 70%); }
-        .admin-grid .admin-card:nth-child(6) { background: linear-gradient(150deg, #eaf2ff 0%, rgba(255,255,255,0.95) 70%); }
-        .admin-label { color: #0b401c; font-size: 0.82rem; font-weight: 600; }
-        .admin-value { font-size: 1.35rem; font-weight: 800; color: #0f703d; }
-        .admin-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
-        .admin-panels-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
-        .panel { background: rgba(255, 255, 255, 0.92); border: 1px solid #dbe4f4; border-radius: 14px; padding: 0.9rem; box-shadow: var(--shadow-sm); }
-        .list { max-height: 360px; overflow: auto; border: 1px solid #ebf0f9; border-radius: 10px; padding: 0.45rem 0.55rem; background: #fff; }
-        .row { border-bottom: 1px solid #edf1f9; padding: 0.48rem 0; }
-        .row:last-child { border-bottom: 0; }
-        .toolbar { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.5rem; }
-        .toolbar input, .toolbar select { padding: 0.4rem 0.55rem; border: 1px solid #d5dfed; border-radius: 10px; font-family: var(--font-body); }
-        .btn { border: none; background: linear-gradient(130deg, #1f8f63 0%, #24a07b 100%); color: #fff; border-radius: 999px; padding: 0.38rem 0.72rem; font-weight: 700; cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, filter .16s ease; box-shadow: 0 10px 24px rgba(31,143,99,.2); }
-        .btn:hover { transform: translateY(-1px); filter: brightness(1.03); box-shadow: 0 12px 28px rgba(31,143,99,.24); }
-        .badge { font-size: 0.72rem; border: 1px solid #d9e0eb; padding: 0.1rem 0.45rem; border-radius: 999px; background: #f7f9fd; }
-        .panel h3 { font-size: 1.12rem; margin-bottom: 0.45rem; position: relative; padding-left: .7rem; }
-        .panel h3::before {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: .2rem;
-            width: 4px;
-            height: 1.05rem;
-            border-radius: 999px;
-            background: linear-gradient(180deg, #1f8f63 0%, #2b6ef2 100%);
-        }
-        @media (max-width: 1120px) { .admin-panels-3 { grid-template-columns: 1fr; } }
-        @media (max-width: 960px) { .admin-panels { grid-template-columns: 1fr; } }
     </style>
 </head>
-<body style="background:#1f4bca;">
-    <div class="admin-shell">
-        <div class="admin-header">
+<body class="dashboard-body">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">TaskFlow</span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#dashboardSection" class="nav-item section-link active">
+                <span class="nav-icon">&#128202;</span>
+                <span class="nav-text">Dashboard</span>
+            </a>
+            <a href="user-management.html" class="nav-item section-link">
+                <span class="nav-icon">&#128100;</span>
+                <span class="nav-text">User Management</span>
+            </a>
+            <a href="operational-tasks.html" class="nav-item section-link">
+                <span class="nav-icon">&#128736;</span>
+                <span class="nav-text">Operational Task Monitor</span>
+            </a>
+            <a href="leaderboard.html" class="nav-item section-link">
+                <span class="nav-icon">&#127942;</span>
+                <span class="nav-text">Top Performer Leaderboard</span>
+            </a>
+            <a href="reminders.html" class="nav-item section-link">
+                <span class="nav-icon">&#9203;</span>
+                <span class="nav-text">Reminder Queue (Next 24h)</span>
+            </a>
+            <a href="schedule-preview.html" class="nav-item section-link">
+                <span class="nav-icon">&#128197;</span>
+                <span class="nav-text">User Schedule Preview</span>
+            </a>
+            <a href="incident-center.html" class="nav-item section-link">
+                <span class="nav-icon">&#9888;</span>
+                <span class="nav-text">Incident Center</span>
+            </a>
+            <a href="dispatch-board.html" class="nav-item section-link">
+                <span class="nav-icon">&#128666;</span>
+                <span class="nav-text">Dispatch Board</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="connection-status" id="connectionStatus">
+                <span class="status-dot offline"></span>
+                <span class="status-text">Offline Mode</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="dashboard-header">
             <div>
-                <h1>Admin Control Center</h1>
-                <p id="adminWelcome">Welcome, Admin</p>
+                <h1 class="page-title">Admin Control Center</h1>
+                <p class="page-subtitle" id="adminWelcome">Welcome, Admin</p>
             </div>
             <div>
                 <button class="btn" onclick="downloadPlatformReportPdf()">Download PDF Report</button>
                 <button class="btn" onclick="refreshAdminData()">Refresh</button>
                 <button class="btn" onclick="handleLogout()">Logout</button>
             </div>
-        </div>
+        </header>
 
-        <div class="admin-grid">
-            <div class="admin-card"><div class="admin-label">Total Users</div><div id="totalUsers" class="admin-value">0</div></div>
-            <div class="admin-card"><div class="admin-label">Active Users</div><div id="activeUsers" class="admin-value">0</div></div>
-            <div class="admin-card"><div class="admin-label">Total Tasks</div><div id="totalTasks" class="admin-value">0</div></div>
-            <div class="admin-card"><div class="admin-label">Completed Tasks</div><div id="completedTasks" class="admin-value">0</div></div>
-            <div class="admin-card"><div class="admin-label">Overdue Tasks</div><div id="overdueTasks" class="admin-value">0</div></div>
-            <div class="admin-card"><div class="admin-label">Total Earnings</div><div id="platformEarnings" class="admin-value">KSh 0</div></div>
-        </div>
-
-        <div class="admin-panels">
-            <section class="panel">
-                <h3>User Management</h3>
-                <div class="toolbar">
-                    <input id="userSearchInput" type="text" placeholder="Search name or phone">
-                    <select id="userStatusFilter">
-                        <option value="all">All status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
-                    <select id="userWorkTypeFilter">
-                        <option value="">All work types</option>
-                        <option value="boda_boda">boda_boda</option>
-                        <option value="market_vendor">market_vendor</option>
-                        <option value="artisan">artisan</option>
-                        <option value="domestic_worker">domestic_worker</option>
-                        <option value="plumber">plumber</option>
-                        <option value="other">other</option>
-                    </select>
-                    <button class="btn" onclick="applyUserFilters()">Apply</button>
+        <div class="content-wrapper">
+            <section id="dashboardSection" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Dashboard</h2>
                 </div>
-                <div id="usersList" class="list"></div>
-            </section>
-            <section class="panel">
-                <h3>Operational Task Monitor</h3>
-                <div id="adminTasksList" class="list"></div>
-            </section>
-        </div>
-
-        <div class="admin-panels-3">
-            <section class="panel">
-                <h3>Top Performer Leaderboard</h3>
-                <div id="leaderboardList" class="list"></div>
-            </section>
-            <section class="panel">
-                <h3>Reminder Queue (Next 24h)</h3>
-                <div id="reminderQueueList" class="list"></div>
-            </section>
-            <section class="panel">
-                <h3>User Schedule Preview</h3>
-                <div class="toolbar">
-                    <select id="previewUserId"></select>
-                    <input id="previewDate" type="date">
-                    <button class="btn" onclick="loadSchedulePreview()">Preview</button>
+                <div class="admin-stats-grid">
+                    <div class="admin-stat"><strong>Total Users</strong><div id="totalUsers" class="value">0</div></div>
+                    <div class="admin-stat"><strong>Active Users</strong><div id="activeUsers" class="value">0</div></div>
+                    <div class="admin-stat"><strong>Total Tasks</strong><div id="totalTasks" class="value">0</div></div>
+                    <div class="admin-stat"><strong>Completed Tasks</strong><div id="completedTasks" class="value">0</div></div>
+                    <div class="admin-stat"><strong>Overdue Tasks</strong><div id="overdueTasks" class="value">0</div></div>
+                    <div class="admin-stat"><strong>Total Earnings</strong><div id="platformEarnings" class="value">KSh 0</div></div>
                 </div>
-                <div id="schedulePreviewList" class="list"></div>
             </section>
         </div>
-
-        <div class="admin-panels" style="margin-top: 0.75rem;">
-            <section class="panel" style="grid-column: 1 / -1;">
-                <h3>Incident Center</h3>
-                <div class="toolbar">
-                    <select id="incidentStatusFilter">
-                        <option value="all">All incidents</option>
-                        <option value="open">Open</option>
-                        <option value="investigating">Investigating</option>
-                        <option value="resolved">Resolved</option>
-                        <option value="dismissed">Dismissed</option>
-                    </select>
-                    <button class="btn" onclick="loadIncidentCenter()">Refresh Incidents</button>
-                    <span id="incidentSummary" class="badge">Open: 0 | Investigating: 0 | Critical Open: 0</span>
-                </div>
-                <div id="incidentList" class="list"></div>
-            </section>
-        </div>
-
-        <div class="admin-panels" style="margin-top: 0.75rem;">
-            <section class="panel" style="grid-column: 1 / -1;">
-                <h3>Dispatch Board</h3>
-                <div class="toolbar">
-                    <select id="dispatchTaskSelect"></select>
-                    <select id="dispatchTargetUserSelect"></select>
-                    <input id="dispatchReason" type="text" placeholder="Reason (optional)">
-                    <button class="btn" onclick="executeDispatch()">Reassign Task</button>
-                </div>
-                <div id="dispatchStatus" class="badge">Pick task and target user, then reassign.</div>
-                <div id="dispatchHistoryList" class="list" style="margin-top:0.5rem;"></div>
-            </section>
-        </div>
-    </div>
+    </main>
 
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>

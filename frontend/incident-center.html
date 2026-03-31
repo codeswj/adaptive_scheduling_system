@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Incident Center - TaskFlow</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <style>body{background:#f8fafc;} .panel{border-radius:14px;border:1px solid #dbe4f4;background:#fff;padding:1.5rem;box-shadow:var(--shadow-sm);} .toolbar select{margin-right:0.5rem;padding:0.6rem;border:1px solid #d5dfed;border-radius:10px;} .empty{color:#6171a5;margin-top:1rem;}</style>
+</head>
+<body class="dashboard-body">
+    <aside class="sidebar">
+        <div class="sidebar-header"><div class="logo"><span class="logo-icon">⚡</span><span class="logo-text">TaskFlow</span></div></div>
+        <nav class="sidebar-nav">
+            <a href="admin-dashboard.html" class="nav-item">Dashboard</a>
+            <a href="user-management.html" class="nav-item">User Management</a>
+            <a href="operational-tasks.html" class="nav-item">Operational Task Monitor</a>
+            <a href="leaderboard.html" class="nav-item">Top Performer Leaderboard</a>
+            <a href="reminders.html" class="nav-item">Reminder Queue (Next 24h)</a>
+            <a href="schedule-preview.html" class="nav-item">User Schedule Preview</a>
+            <a href="incident-center.html" class="nav-item active">Incident Center</a>
+            <a href="dispatch-board.html" class="nav-item">Dispatch Board</a>
+        </nav>
+    </aside>
+    <main class="main-content">
+        <header class="dashboard-header"><h1 class="page-title">Incident Center</h1></header>
+        <section class="content-section"><div class="panel">
+            <div class="toolbar">
+                <select><option>All incidents</option><option>Open</option><option>Investigating</option></select>
+                <button class="btn">Refresh Incidents</button>
+                <span class="badge">Open: 0 | Investigating: 0 | Critical Open: 0</span>
+            </div>
+            <p class="empty">No incidents found for selected filter.</p>
+        </div></section>
+    </main>
+</body>
+</html>

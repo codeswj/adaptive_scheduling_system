@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reminder Queue - TaskFlow</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <style>body{background:#f8fafc;} .panel{border-radius:14px;border:1px solid #dbe4f4;background:#fff;padding:1.5rem;box-shadow:var(--shadow-sm);} .empty{color:#6171a5;font-style:italic;}</style>
+</head>
+<body class="dashboard-body">
+    <aside class="sidebar">
+        <div class="sidebar-header"><div class="logo"><span class="logo-icon">⚡</span><span class="logo-text">TaskFlow</span></div></div>
+        <nav class="sidebar-nav">
+            <a href="admin-dashboard.html" class="nav-item">Dashboard</a>
+            <a href="user-management.html" class="nav-item">User Management</a>
+            <a href="operational-tasks.html" class="nav-item">Operational Task Monitor</a>
+            <a href="leaderboard.html" class="nav-item">Top Performer Leaderboard</a>
+            <a href="reminders.html" class="nav-item active">Reminder Queue (Next 24h)</a>
+            <a href="schedule-preview.html" class="nav-item">User Schedule Preview</a>
+            <a href="incident-center.html" class="nav-item">Incident Center</a>
+            <a href="dispatch-board.html" class="nav-item">Dispatch Board</a>
+        </nav>
+    </aside>
+    <main class="main-content">
+        <header class="dashboard-header"><h1 class="page-title">Reminder Queue (Next 24h)</h1></header>
+        <section class="content-section"><div class="panel"><p class="empty">No reminders due in next 24 hours.</p></div></section>
+    </main>
+</body>
+</html>

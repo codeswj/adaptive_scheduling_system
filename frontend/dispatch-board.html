@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dispatch Board - TaskFlow</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <style>body{background:#f8fafc;} .panel{border-radius:14px;border:1px solid #dbe4f4;background:#fff;padding:1.5rem;box-shadow:var(--shadow-sm);} .toolbar select,.toolbar input{margin-right:0.5rem;padding:0.6rem;border-radius:10px;border:1px solid #d5dfed;} .empty{color:#6171a5;}</style>
+</head>
+<body class="dashboard-body">
+    <aside class="sidebar">
+        <div class="sidebar-header"><div class="logo"><span class="logo-icon">⚡</span><span class="logo-text">TaskFlow</span></div></div>
+        <nav class="sidebar-nav">
+            <a href="admin-dashboard.html" class="nav-item">Dashboard</a>
+            <a href="user-management.html" class="nav-item">User Management</a>
+            <a href="operational-tasks.html" class="nav-item">Operational Task Monitor</a>
+            <a href="leaderboard.html" class="nav-item">Top Performer Leaderboard</a>
+            <a href="reminders.html" class="nav-item">Reminder Queue (Next 24h)</a>
+            <a href="schedule-preview.html" class="nav-item">User Schedule Preview</a>
+            <a href="incident-center.html" class="nav-item">Incident Center</a>
+            <a href="dispatch-board.html" class="nav-item active">Dispatch Board</a>
+        </nav>
+    </aside>
+    <main class="main-content">
+        <header class="dashboard-header"><h1 class="page-title">Dispatch Board</h1></header>
+        <section class="content-section"><div class="panel">
+            <div class="toolbar">
+                <select><option>Select task</option></select>
+                <select><option>Select target user</option></select>
+                <input type="text" placeholder="Reason (optional)">
+                <button class="btn">Reassign Task</button>
+            </div>
+            <div class="badge" style="margin-top:0.5rem;">Pick task and target user, then reassign.</div>
+            <p class="empty" style="margin-top:0.75rem;">No dispatch history yet.</p>
+        </div></section>
+    </main>
+</body>
+</html>

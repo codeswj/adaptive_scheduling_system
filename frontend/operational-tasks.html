@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operational Task Monitor - TaskFlow</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <style>
+        body { background:#f8fafc; }
+        .panel { border-radius:14px; border:1px solid #dbe4f4; background:#fff; box-shadow:var(--shadow-sm); padding:1rem; }
+        .task-item { border-bottom:1px solid #edf1f9; padding:0.9rem 0; }
+        .task-item:last-child { border-bottom:none; }
+        .task-item strong { display:block; }
+        .task-item span { font-size:0.85rem; color:#6171a5; }
+    </style>
+</head>
+<body class="dashboard-body">
+    <aside class="sidebar">
+        <div class="sidebar-header"><div class="logo"><span class="logo-icon">⚡</span><span class="logo-text">TaskFlow</span></div></div>
+        <nav class="sidebar-nav">
+            <a href="admin-dashboard.html" class="nav-item">Dashboard</a>
+            <a href="user-management.html" class="nav-item">User Management</a>
+            <a href="operational-tasks.html" class="nav-item active">Operational Task Monitor</a>
+            <a href="leaderboard.html" class="nav-item">Top Performer Leaderboard</a>
+            <a href="reminders.html" class="nav-item">Reminder Queue (Next 24h)</a>
+            <a href="schedule-preview.html" class="nav-item">User Schedule Preview</a>
+            <a href="incident-center.html" class="nav-item">Incident Center</a>
+            <a href="dispatch-board.html" class="nav-item">Dispatch Board</a>
+        </nav>
+    </aside>
+    <main class="main-content">
+        <header class="dashboard-header"><h1 class="page-title">Operational Task Monitor</h1></header>
+        <section class="content-section"><div class="panel">
+            <div class="task-item"><strong>delivery (Overdue)</strong><span>Owner: Drake | Status: pending | Urgency: medium | Priority: 58 | Deadline: 31 Mar 2026, 08:00</span></div>
+            <div class="task-item"><strong>nice (Overdue)</strong><span>Owner: Drake | Status: pending | Urgency: medium | Priority: 58 | Deadline: 31 Mar 2026, 08:00</span></div>
+            <div class="task-item"><strong>Package Pickup</strong><span>Owner: Drake | Status: pending | Urgency: medium | Priority: 28 | Deadline: None</span></div>
+            <div class="task-item"><strong>TV DELIVERY</strong><span>Owner: Drake | Status: pending | Urgency: medium | Priority: 28 | Deadline: None</span></div>
+            <div class="task-item"><strong>Client Meeting</strong><span>Owner: Drake | Status: pending | Urgency: medium | Priority: 28 | Deadline: None</span></div>
+            <div class="task-item"><strong>good</strong><span>Owner: Drake | Status: pending | Urgency: low | Priority: 26 | Deadline: 11 Apr 2026, 13:32</span></div>
+        </div></section>
+    </main>
+</body>
+</html>
