@@ -397,6 +397,238 @@ async function loadAvailability() {
     }
 }
 
+function createPdfDownload(htmlContent, filename) {
+    const blob = new Blob([htmlContent], { type: 'application/pdf' });
+    const url = window.URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    window.URL.revokeObjectURL(url);
+}
+
+function buildAvailabilityPdfContent(availabilityRows) {
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const rows = availabilityRows.map(row => {
+        const day = dayNames[Number(row.day_of_week)] || 'Unknown';
+        const start = escapeHtml(row.start_time || 'N/A');
+        const end = escapeHtml(row.end_time || 'N/A');
+        const status = Number(row.is_active) === 1 ? 'Active' : 'Inactive';
+        return `
+            <tr>
+                <td>${day}</td>
+                <td>${start}</td>
+                <td>${end}</td>
+                <td>${status}</td>
+            </tr>`;
+    }).join('');
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Weekly Availability</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 24px; }
+        h1 { color: #1f8f63; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        th, td { border: 1px solid #ccc; padding: 10px 12px; text-align: left; }
+        th { background: #1f8f63; color: #ffffff; }
+        tr:nth-child(even) { background: #f4f7fb; }
+    </style>
+</head>
+<body>
+    <h1>Weekly Availability</h1>
+    <p>Generated on ${new Date().toLocaleString()}</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Day</th>
+                <th>Start</th>
+                <th>End</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${rows}
+        </tbody>
+    </table>
+</body>
+</html>`;
+}
+
+function buildTemplatesPdfContent(templates) {
+    const rows = templates.map(template => {
+        return `
+            <tr>
+                <td>${escapeHtml(template.name || 'Untitled')}</td>
+                <td>${escapeHtml(template.title || 'Untitled')}</td>
+                <td>${escapeHtml(template.urgency || 'medium')}</td>
+                <td>${escapeHtml(String(template.estimated_duration || 0))}</td>
+            </tr>`;
+    }).join('');
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Task Templates</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 24px; }
+        h1 { color: #1f8f63; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        th, td { border: 1px solid #ccc; padding: 10px 12px; text-align: left; }
+        th { background: #1f8f63; color: #ffffff; }
+        tr:nth-child(even) { background: #f4f7fb; }
+    </style>
+</head>
+<body>
+    <h1>Task Templates</h1>
+    <p>Generated on ${new Date().toLocaleString()}</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Title</th>
+                <th>Urgency</th>
+                <th>Duration (mins)</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${rows}
+        </tbody>
+    </table>
+</body>
+</html>`;
+}
+
+function buildRemindersPdfContent(reminders) {
+    const rows = reminders.map(reminder => {
+        return `
+            <tr>
+                <td>${escapeHtml(reminder.task_title || 'Untitled')}</td>
+                <td>${escapeHtml(reminder.remind_at || 'N/A')}</td>
+                <td>${escapeHtml(reminder.status || 'pending')}</td>
+                <td>${escapeHtml(reminder.channel || 'in_app')}</td>
+            </tr>`;
+    }).join('');
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Reminders</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 24px; }
+        h1 { color: #1f8f63; }
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        th, td { border: 1px solid #ccc; padding: 10px 12px; text-align: left; }
+        th { background: #1f8f63; color: #ffffff; }
+        tr:nth-child(even) { background: #f4f7fb; }
+    </style>
+</head>
+<body>
+    <h1>Reminders</h1>
+    <p>Generated on ${new Date().toLocaleString()}</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Task</th>
+                <th>Remind At</th>
+                <th>Status</th>
+                <th>Channel</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${rows}
+        </tbody>
+    </table>
+</body>
+</html>`;
+}
+
+function buildInsightsPdfContent(insights) {
+    const metrics = insights.metrics || {};
+    const recommendations = insights.recommendations || [];
+    const recRows = recommendations.map(rec => `<li>${escapeHtml(rec)}</li>`).join('');
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Productivity Insights</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 24px; }
+        h1 { color: #1f8f63; }
+        .metrics, .recommendations { margin-top: 16px; }
+        .metrics li, .recommendations li { margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+    <h1>Productivity Insights</h1>
+    <p>Generated on ${new Date().toLocaleString()}</p>
+    <div class="metrics">
+        <h2>Metrics</h2>
+        <ul>
+            <li>Open tasks: ${escapeHtml(String(metrics.open_tasks || 0))}</li>
+            <li>Completed tasks: ${escapeHtml(String(metrics.completed_tasks || 0))}</li>
+            <li>Avg duration: ${escapeHtml(String(metrics.average_duration_minutes || 0))} mins</li>
+            <li>Total earnings: ${escapeHtml(String(metrics.total_earnings || 0))}</li>
+        </ul>
+    </div>
+    <div class="recommendations">
+        <h2>Recommendations</h2>
+        <ul>
+            ${recRows || '<li>No recommendations available.</li>'}
+        </ul>
+    </div>
+</body>
+</html>`;
+}
+
+async function downloadAvailabilityPdf() {
+    if (!availabilityCache.length) {
+        alert('No availability data available. Please save availability first.');
+        return;
+    }
+    const html = buildAvailabilityPdfContent(availabilityCache);
+    createPdfDownload(html, `weekly_availability_${new Date().toISOString().slice(0, 10)}.pdf`);
+    Utils.showNotification('Weekly availability PDF downloaded', 'success');
+}
+
+async function downloadTemplatesPdf() {
+    if (!templateCache.length) {
+        alert('No templates available to export. Please create a template first.');
+        return;
+    }
+    const html = buildTemplatesPdfContent(templateCache);
+    createPdfDownload(html, `task_templates_${new Date().toISOString().slice(0, 10)}.pdf`);
+    Utils.showNotification('Templates PDF downloaded', 'success');
+}
+
+async function downloadRemindersPdf() {
+    if (!remindersCache.length) {
+        alert('No reminders available to export. Please add a reminder first.');
+        return;
+    }
+    const html = buildRemindersPdfContent(remindersCache);
+    createPdfDownload(html, `reminders_${new Date().toISOString().slice(0, 10)}.pdf`);
+    Utils.showNotification('Reminders PDF downloaded', 'success');
+}
+
+async function downloadInsightsPdf() {
+    try {
+        const data = await api.getInsights();
+        const html = buildInsightsPdfContent(data);
+        createPdfDownload(html, `insights_${new Date().toISOString().slice(0, 10)}.pdf`);
+        Utils.showNotification('Insights PDF downloaded', 'success');
+    } catch (error) {
+        alert(error.message || 'Failed to download insights PDF.');
+    }
+}
+
 async function createTemplate() {
     const payload = {
         name: document.getElementById('tplName').value.trim(),
