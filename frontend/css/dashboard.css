@@ -480,22 +480,22 @@
     width: min(760px, 92vw);
     max-height: 92vh;
     overflow: auto;
-    background: #1e40af;
-    border: 1px solid #ffffff;
+    background: #e6ebff;
+    border: 1px solid #c4d0ff;
     border-radius: 18px;
     box-shadow: var(--shadow-lg);
 }
 
 .modal-header {
     padding: 1rem 1.1rem;
-    border-bottom: 1px solid #ffffff;
+    border-bottom: 1px solid #c4d0ff;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 .modal-header h2 {
-    color: #ffffff;
+    color: #07070c;
     font-weight: 800;
     font-size: 1.5rem;
     margin: 0;
@@ -541,7 +541,7 @@
 .modal-body label {
     display: block;
     margin-bottom: 0.5rem;
-    color: #ffffff;
+    color: #040400;
     font-weight: 700;
     font-size: 0.875rem;
 }
