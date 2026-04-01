@@ -53,17 +53,7 @@ async function downloadSchedulePDF() {
         
         // Generate PDF content
         const pdfContent = generateSchedulePDFContent(planDate, data);
-        
-        // Create download
-        const blob = new Blob([pdfContent], { type: 'text/html' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `daily_schedule_${planDate}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        createPdfDownload(pdfContent, `daily_schedule_${planDate}.pdf`);
         
         // Update display
         summaryEl.textContent = `${data.summary.scheduled_tasks} tasks, ${data.summary.scheduled_minutes} mins (${data.availability.start_time} - ${data.availability.end_time})`;
@@ -398,7 +388,9 @@ async function loadAvailability() {
 }
 
 function createPdfDownload(htmlContent, filename) {
-    const blob = new Blob([htmlContent], { type: 'application/pdf' });
+    const lines = convertHtmlToPdfLines(htmlContent);
+    const pdfContent = buildSimplePdf(lines);
+    const blob = new Blob([pdfContent], { type: 'application/pdf' });
     const url = window.URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = url;
@@ -407,6 +399,70 @@ function createPdfDownload(htmlContent, filename) {
     anchor.click();
     document.body.removeChild(anchor);
     window.URL.revokeObjectURL(url);
+}
+
+function convertHtmlToPdfLines(htmlContent) {
+    if (!htmlContent) return [];
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlContent, 'text/html');
+    const text = doc.body ? doc.body.innerText : doc.documentElement.textContent;
+    return String(text || '')
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
+}
+
+function escapePdfText(text) {
+    return String(text || '')
+        .replace(/[^ -]/g, '')
+        .replace(/\\/g, '\\\\')
+        .replace(/\(/g, '\\(')
+        .replace(/\)/g, '\\)');
+}
+
+function buildSimplePdf(lines) {
+    let stream = 'BT\n/F1 12 Tf\n';
+    let y = 780;
+    const maxLines = 48;
+    let lineCount = 0;
+
+    for (const line of lines) {
+        if (lineCount >= maxLines) break;
+        const safeLine = escapePdfText(line);
+        stream += `1 0 0 1 50 ${y} Tm (${safeLine}) Tj\n`;
+        y -= 16;
+        lineCount += 1;
+    }
+
+    stream += 'ET';
+
+    const objects = [
+        '<< /Type /Catalog /Pages 2 0 R >>',
+        '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+        '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+        '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+        '<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream'
+    ];
+
+    let pdf = '%PDF-1.4\n';
+    const offsets = [];
+
+    objects.forEach((obj, index) => {
+        offsets.push(pdf.length);
+        const num = index + 1;
+        pdf += `${num} 0 obj\n${obj}\nendobj\n`;
+    });
+
+    const xrefPos = pdf.length;
+    pdf += `xref\n0 ${objects.length + 1}\n`;
+    pdf += '0000000000 65535 f \n';
+    offsets.forEach(offset => {
+        pdf += `${offset.toString().padStart(10, '0')} 00000 n \n`;
+    });
+
+    pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\n`;
+    pdf += `startxref\n${xrefPos}\n%%EOF`;
+    return pdf;
 }
 
 function buildAvailabilityPdfContent(availabilityRows) {
